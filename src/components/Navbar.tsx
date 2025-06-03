@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { MapPin, Menu, X, LogIn } from 'lucide-react';
+import { HelpCircle, Menu, X, LogIn } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 
@@ -27,13 +27,15 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4">
-            <Button 
-              variant="outline" 
-              className="inline-flex items-center px-4 py-2 border-2 border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl font-medium"
-            >
-              <MapPin className="mr-2 h-4 w-4 text-blue-600" />
-              <span>Bihar</span>
-            </Button>
+            <Link href="/support">
+              <Button 
+                variant="outline" 
+                className="inline-flex items-center px-4 py-2 border-2 border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl font-medium"
+              >
+                <HelpCircle className="mr-2 h-4 w-4 text-blue-600" />
+                <span>Support</span>
+              </Button>
+            </Link>
             
             <Link href="/auth">
               <Button 
@@ -67,13 +69,15 @@ const Navbar = () => {
         isMenuOpen ? "block" : "hidden"
       )}>
         <div className="pt-2 pb-3 space-y-3 px-4">
-          <Button 
-            variant="outline" 
-            className="w-full justify-center border-2 border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl font-medium"
-          >
-            <MapPin className="mr-2 h-4 w-4 text-blue-600" />
-            <span>Bihar</span>
-          </Button>
+          <Link href="/support" className="block">
+            <Button 
+              variant="outline" 
+              className="w-full justify-center border-2 border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl font-medium"
+            >
+              <HelpCircle className="mr-2 h-4 w-4 text-blue-600" />
+              <span>Support</span>
+            </Button>
+          </Link>
           
           <Link href="/auth" className="block">
             <Button 

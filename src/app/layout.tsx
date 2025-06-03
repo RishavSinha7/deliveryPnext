@@ -4,8 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ClientWrapper from "@/components/client-wrapper";
+import ConditionalLayout from "@/components/ConditionalLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,9 +24,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <ClientWrapper>
           <TooltipProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
             <Toaster />
             <Sonner />
-            {children}
           </TooltipProvider>
         </ClientWrapper>
       </body>

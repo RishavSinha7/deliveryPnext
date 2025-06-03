@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Phone, Lock, UserPlus, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
 
 // Define the validation schema for sign in
 const signInSchema = z.object({
@@ -101,18 +101,19 @@ export default function AuthPage() {
     } else {
       router.push("/");
     }
-  };
+  };  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        {/* Back to Home Button */}
+        <div className="mb-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Home</span>
+            </Button>
+          </Link>
+        </div>
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="p-4">
-        <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          <span>Back to Home</span>
-        </Link>
-      </div>
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
           <div className="mb-6 text-center">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
               {activeTab === "signin" ? "Welcome Back" : "Create Account"}
@@ -337,11 +338,9 @@ export default function AuthPage() {
                     Sign in
                   </button>
                 </p>
-              </div>
-            </TabsContent>
+              </div>            </TabsContent>
           </Tabs>
         </div>
-      </div>
     </div>
   );
 }
