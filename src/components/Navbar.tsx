@@ -65,23 +65,23 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       <div className={cn(
-        "md:hidden bg-white border-t border-gray-100",
-        isMenuOpen ? "block" : "hidden"
+        "md:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-500 ease-in-out",
+        isMenuOpen ? "max-h-48 opacity-100" : "max-h-0 opacity-0"
       )}>
-        <div className="pt-2 pb-3 space-y-3 px-4">
-          <Link href="/support" className="block">
+        <div className="pt-2 pb-3 space-y-3 px-4 transform transition-all duration-300 delay-100">
+          <Link href="/support" className="block transform transition-all duration-200 hover:scale-105">
             <Button 
               variant="outline" 
-              className="w-full justify-center border-2 border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl font-medium"
+              className="w-full justify-center border-2 border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl font-medium transition-all duration-200"
             >
               <HelpCircle className="mr-2 h-4 w-4 text-blue-600" />
               <span>Support</span>
             </Button>
           </Link>
           
-          <Link href="/auth" className="block">
+          <Link href="/auth" className="block transform transition-all duration-200 hover:scale-105">
             <Button 
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl font-medium"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl font-medium transition-all duration-200"
             >
               <LogIn className="mr-2 h-4 w-4" />
               <span>Login</span>

@@ -256,30 +256,7 @@ const SupportPage = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-
-        {/* Emergency Contact */}
-        <div className="mt-12">
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="flex items-center justify-between p-6">
-              <div className="flex items-center space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <Phone className="h-6 w-6 text-red-600" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-red-900">Emergency Support</h3>
-                  <p className="text-red-700">For urgent issues during deliveries or safety concerns</p>
-                </div>
-              </div>
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
-                Call Emergency: 911
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+          </div>        </div>
       </div>
     </div>
   );
