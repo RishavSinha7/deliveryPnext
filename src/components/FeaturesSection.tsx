@@ -1,12 +1,104 @@
 
 "use client";
 
-"use client";
-
-import { Truck, Bike, Package, User, MapPin } from 'lucide-react';
+import { useState } from 'react';
+import { Truck, Bike, Package, User, MapPin, Loader2, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const FeaturesSection = () => {
+  const [currentLocation, setCurrentLocation] = useState('Bihar');
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isEstimateModalOpen, setIsEstimateModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  // Function to get user's current location
+  const getCurrentLocation = () => {
+    setIsLoadingLocation(true);
+    
+    if (!navigator.geolocation) {
+      toast({
+        title: "Geolocation not supported",
+        description: "Your browser does not support geolocation.",
+        variant: "destructive",
+      });
+      setIsLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          console.log('Location coordinates:', { latitude, longitude });
+          
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+          );
+          const data = await response.json();
+          console.log('Location data:', data);
+          
+          // Format the address from the response
+          const city = data.address?.city || data.address?.town || data.address?.village || data.address?.state || 'Unknown Location';
+          setCurrentLocation(city);
+          
+          toast({
+            title: "Location detected",
+            description: city,
+          });
+        } catch (error) {
+          console.error('Location fetch error:', error);
+          toast({
+            title: "Error fetching location details",
+            description: "Failed to get location information. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoadingLocation(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        
+        let errorMessage = "Could not access your location.";
+        let debugInfo = `Error code: ${error.code}`;
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location permission denied. Please allow location access in your browser.";
+            debugInfo += " - Permission denied by user";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information is unavailable.";
+            debugInfo += " - Position unavailable";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            debugInfo += " - Request timeout";
+            break;
+          default:
+            errorMessage = "An unknown location error occurred.";
+            debugInfo += " - Unknown error";
+        }
+        
+        console.log('Geolocation debug info:', debugInfo);
+        
+        toast({
+          title: "Location error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setIsLoadingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
   const services = [
     {
       title: "Truck",
@@ -30,8 +122,41 @@ const FeaturesSection = () => {
     }
   ];
 
+  const estimateServices = [
+    {
+      title: "Two Wheelers",
+      icon: "🏍️",
+      description: "Quick deliveries with bikes",
+      link: "/estimate/two-wheelers"
+    },
+    {
+      title: "Trucks",
+      icon: "🚛",
+      description: "Heavy goods transportation",
+      link: "/estimate/trucks"
+    },
+    {
+      title: "Packers & Movers",
+      icon: "📦",
+      description: "Complete relocation services",
+      link: "/estimate/packers-movers"
+    },
+    {
+      title: "Intercity Courier Service",
+      icon: "🚚",
+      description: "Inter-city delivery solutions",
+      link: "/estimate/intercity"
+    }
+  ];
+
+  const handleEstimateClick = (service: any) => {
+    setIsEstimateModalOpen(false);
+    // Navigate to the service page
+    window.location.href = service.link;
+  };
+
   return (
-    <div className="relative bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 min-h-screen flex items-center justify-center">
+    <div className="relative bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 py-16 flex items-center justify-center">
       {/* Background overlay with delivery person and vehicles */}
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
       
@@ -44,13 +169,23 @@ const FeaturesSection = () => {
       {/* Center card */}
       <div className="relative z-20 bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md w-full">
         {/* City selector */}
-        <div className="flex items-center mb-6 pb-4 border-b border-gray-200">
-          <MapPin className="h-5 w-5 text-blue-600 mr-2" />
-          <span className="text-gray-700 font-medium">City: Bihar</span>
+        <button 
+          onClick={getCurrentLocation}
+          disabled={isLoadingLocation}
+          className="flex items-center w-full mb-6 pb-4 border-b border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoadingLocation ? (
+            <Loader2 className="h-5 w-5 text-blue-600 mr-2 animate-spin" />
+          ) : (
+            <MapPin className="h-5 w-5 text-blue-600 mr-2" />
+          )}
+          <span className="text-gray-700 font-medium flex-1 text-left">
+            City: {currentLocation}
+          </span>
           <svg className="w-4 h-4 ml-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
-        </div>
+        </button>
 
         {/* Services grid */}
         <div className="grid grid-cols-4 gap-4 mb-8">
@@ -75,6 +210,7 @@ const FeaturesSection = () => {
 
         {/* Get an Estimate button */}
         <Button 
+          onClick={() => setIsEstimateModalOpen(true)}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 text-lg rounded-xl shadow-lg"
         >
           Get an Estimate
@@ -83,6 +219,55 @@ const FeaturesSection = () => {
           </div>
         </Button>
       </div>
+
+      {/* Estimate Modal */}
+      <Dialog open={isEstimateModalOpen} onOpenChange={setIsEstimateModalOpen}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden animate-in slide-in-from-bottom-4 duration-1000">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Get an Estimate</DialogTitle>
+          </DialogHeader>
+          <div className="flex">
+            {/* Left Side - Get an Estimate */}
+            <div className="bg-gray-100 p-8 w-1/3 flex flex-col justify-center">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">Get an Estimate</h2>
+              <p className="text-gray-600 leading-relaxed">
+                Please fill in the details, so we can provide you with the best of our services
+              </p>
+            </div>
+            
+            {/* Right Side - Service Options */}
+            <div className="flex-1 p-8">
+              <div className="space-y-4">
+                {estimateServices.map((service, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleEstimateClick(service)}
+                    className="w-full p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 flex items-center justify-between group"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <span className="text-3xl">{service.icon}</span>
+                      <div className="text-left">
+                        <h3 className="font-semibold text-gray-800 group-hover:text-blue-600">
+                          {service.title}
+                        </h3>
+                        <p className="text-sm text-gray-500">{service.description}</p>
+                      </div>
+                    </div>
+                    <svg 
+                      className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
