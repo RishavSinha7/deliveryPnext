@@ -103,22 +103,22 @@ const FeaturesSection = () => {
     {
       title: "Truck",
       icon: Truck,
-      link: "/trucks"
+      link: "estimate/trucks"
     },
     {
       title: "Two Wheeler",
       icon: Bike,
-      link: "/bikes"
+      link: "estimate/Two Wheeler"
     },
     {
       title: "Packers & Movers",
       icon: Package,
-      link: "/packers-movers"
+      link: "estimate/packers-movers"
     },
     {
       title: "Intercity Courier Service",
       icon: User,
-      link: "/intercity"
+      link: "estimate/intercity"
     }
   ];
 
@@ -222,7 +222,7 @@ const FeaturesSection = () => {
 
       {/* Estimate Modal */}
       <Dialog open={isEstimateModalOpen} onOpenChange={setIsEstimateModalOpen}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden animate-in slide-in-from-bottom-4 duration-1000">
+        <DialogContent className="max-w-2xl p-0 overflow-hidden">
           <DialogHeader className="sr-only">
             <DialogTitle>Get an Estimate</DialogTitle>
           </DialogHeader>

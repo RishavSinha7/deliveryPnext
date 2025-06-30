@@ -20,7 +20,7 @@ const Navbar = () => {
                   <span className="text-white font-bold text-xl">P</span>
                 </div>
                 <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
-                  Delivery Partner
+                  Delivery Partners
                 </span>
               </Link>
             </div>
