@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/maps/ui/skeleton";
+import { ArrowRight } from "lucide-react";
 
 import { useJsApiLoader } from "@react-google-maps/api";
 import { MAPS_API_KEY } from "@/components/maps/utils/mapsApiKey";
@@ -53,13 +54,7 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
 
   return (
     <div className="min-h-screen bg-[#fafbfc]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-8 py-4 bg-white shadow-sm">
-        <div className="font-bold text-2xl text-[#2474ff] tracking-wide">DELIVERY PARTNERS</div>
-        <div className="flex gap-8 font-medium text-sm">
-          <a href="#" className="hover:underline">Support</a>
-        </div>
-      </div>
+      
 
       {/* Hero Section with background */}
       <div
@@ -77,26 +72,26 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
         <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2 bg-white rounded-lg shadow-xl px-2 md:px-8 py-6 w-[95vw] md:w-[900px] z-20">
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 items-center">
             <div className="flex-2">
-              <LocationInput placeholder="Pickup Address *" inputRef={originRef} />
+              <LocationInput placeholder="Pickup Address " inputRef={originRef} />
             </div>
             <div className="flex-2">
-              <LocationInput placeholder="Drop Address *" inputRef={destRef} />
+              <LocationInput placeholder="Drop Address " inputRef={destRef} />
             </div>
             <div className="flex-2">
-              <input type="text" placeholder="Phone Number *" className="input input-bordered w-full" />
+              <input type="text" placeholder="Phone Number" className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400" />
             </div>
             <div className="flex-1">
-              <input type="text" placeholder="Name *" className="input input-bordered w-full" />
+              <input type="text" placeholder="Name" className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400" />
             </div>
             <div className="flex-1">
-              <select className="select select-bordered w-full">
+              <select className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-500 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer">
                 <option>What describes you best? *</option>
                 <option>Business</option>
                 <option>Individual</option>
               </select>
             </div>
-            <button className="btn btn-primary px-8 py-6 font-bold font-md border-radius-md">
-              Get an estimate
+            <button className="bg-blue-600 text-white px-6 py-2 font-bold font-md rounded-2xl cursor-pointer inline-flex items-center gap-2 text-sm">
+              Get an estimate <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>

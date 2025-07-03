@@ -108,7 +108,7 @@ const FeaturesSection = () => {
     {
       title: "Two Wheeler",
       icon: Bike,
-      link: "estimate/Two Wheeler"
+      link: "estimate/two-wheelers"
     },
     {
       title: "Packers & Movers",
