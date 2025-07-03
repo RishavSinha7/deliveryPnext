@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -158,7 +157,7 @@ const FeaturesSection = () => {
   return (
     <div className="relative bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 py-16 flex items-center justify-center">
       {/* Background overlay with delivery person and vehicles */}
-      <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-800 via-blue-900 to-blue-1000 opacity-20"></div>
       
       {/* Left side text */}
       <div className="absolute left-8 top-1/2 transform -translate-y-1/2 text-white z-10">
