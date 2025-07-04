@@ -12,7 +12,7 @@ const ConditionalLayout = ({ children }: ConditionalLayoutProps) => {
   const pathname = usePathname();
   
   // Pages where navbar and footer should be hidden
-  const hideNavAndFooter = ['/auth', '/driver'].some(path => pathname.startsWith(path));
+  const hideNavAndFooter = ['/admin', '/driver'].some(path => pathname.startsWith(path));
   
   if (hideNavAndFooter) {
     return (
