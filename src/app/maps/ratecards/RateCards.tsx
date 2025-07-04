@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "@/components/maps/ui/button";
-import { Badge } from "@/components/maps/ui/badge";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 
 interface RateCardProps {
   vehicle: string;

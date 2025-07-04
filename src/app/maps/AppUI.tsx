@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from "react";
-import { Skeleton } from "@/components/maps/ui/skeleton";
+import { useRouter } from "next/navigation";
+import { Skeleton } from "./ui/skeleton";
 import { ArrowRight } from "lucide-react";
 
 import { useJsApiLoader } from "@react-google-maps/api";
-import { MAPS_API_KEY } from "@/components/maps/utils/mapsApiKey";
-import LocationInput from "@/components/maps/LocationInput";
-import { BikeRateCards } from "@/components/maps/ratecards/TwoWheelerRateCards";
-import { TruckRateCards } from "@/components/maps/ratecards/TruckRateCards";
-import { PackersMoversCards } from "@/components/maps/ratecards/pmCards";
-import { IntercityCourierCards } from "@/components/maps/ratecards/icCards";
+import { MAPS_API_KEY } from "./utils/mapsApiKey";
+import LocationInput from "./LocationInput";
+import { BikeRateCards } from "./ratecards/TwoWheelerRateCards";
+import { TruckRateCards } from "./ratecards/TruckRateCards";
+import { PackersMoversCards } from "./ratecards/pmCards";
+import { IntercityCourierCards } from "./ratecards/icCards";
 
 // Props to control what to show
 interface AppUIProps {
@@ -18,6 +19,7 @@ interface AppUIProps {
 }
 
 export default function AppUI({ show = 'both' }: AppUIProps) {
+  const router = useRouter();
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: MAPS_API_KEY,
     libraries: ["places"],
@@ -26,6 +28,22 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const originRef = useRef<HTMLInputElement>(null!);
   const destRef = useRef<HTMLInputElement>(null!);
+
+  const handleGetEstimate = () => {
+    const pickupValue = originRef.current?.value || '';
+    const dropValue = destRef.current?.value || '';
+    
+    if (!pickupValue || !dropValue) {
+      alert('Please enter both pickup and drop locations');
+      return;
+    }
+    
+    // Determine vehicle type based on show prop
+    const vehicleType = show === 'bike' ? 'bike' : 'truck';
+    
+    // Redirect to ride status page with pickup, drop, and vehicle type parameters
+    router.push(`/ride-status?pickup=${encodeURIComponent(pickupValue)}&drop=${encodeURIComponent(dropValue)}&type=${vehicleType}`);
+  };
 
   if (!isLoaded) return <Skeleton className="h-6 w-32" />;
 
@@ -90,8 +108,11 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
                 <option>Individual</option>
               </select>
             </div>
-            <button className="bg-blue-600 text-white px-6 py-2 font-bold font-md rounded-2xl cursor-pointer inline-flex items-center gap-2 text-sm">
-              Get an estimate <ArrowRight className="w-4 h-4" />
+            <button 
+              onClick={handleGetEstimate}
+              className="bg-blue-600 text-white px-6 py-2 font-bold font-md rounded-2xl cursor-pointer inline-flex items-center gap-2 text-sm hover:bg-blue-700 transition-colors"
+            >
+              Book Ride <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
