@@ -213,9 +213,6 @@ const FeaturesSection = () => {
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 text-lg rounded-xl shadow-lg"
         >
           Get an Estimate
-          <div className="ml-2 text-sm opacity-90">
-            Book your ride
-          </div>
         </Button>
       </div>
 
