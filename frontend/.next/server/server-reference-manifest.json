@@ -1,0 +1,78 @@
+{
+  "node": {
+    "00b1e7b0f16466e14745249d6d8686b58593532bc4": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/login/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/dashboard/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/bookings/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/drivers/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/users/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser",
+        "app/admin/login/page": "action-browser",
+        "app/admin/dashboard/page": "action-browser",
+        "app/admin/bookings/page": "action-browser",
+        "app/admin/drivers/page": "action-browser",
+        "app/admin/users/page": "action-browser"
+      }
+    },
+    "60aa468afc5b896e418ca39f3948e530af20fefef2": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/login/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/dashboard/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/bookings/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/drivers/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        },
+        "app/admin/users/page": {
+          "moduleId": "(action-browser)/../node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5CdeliveryPnext%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cadmin%5C%5Clogin%5C%5Cactions.ts%22%2C%5B%7B%22id%22%3A%2200b1e7b0f16466e14745249d6d8686b58593532bc4%22%2C%22exportedName%22%3A%22logout%22%7D%2C%7B%22id%22%3A%2260aa468afc5b896e418ca39f3948e530af20fefef2%22%2C%22exportedName%22%3A%22login%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser",
+        "app/admin/login/page": "action-browser",
+        "app/admin/dashboard/page": "action-browser",
+        "app/admin/bookings/page": "action-browser",
+        "app/admin/drivers/page": "action-browser",
+        "app/admin/users/page": "action-browser"
+      }
+    }
+  },
+  "edge": {},
+  "encryptionKey": "1ZuOhThmDcM3GESCqaQwxN3F7iyx+t4nhS1DyN7/OQ0="
+}
