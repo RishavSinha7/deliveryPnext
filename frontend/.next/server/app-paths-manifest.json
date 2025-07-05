@@ -1,9 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/auth/page": "app/auth/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/admin/login/page": "app/admin/login/page.js",
-  "/admin/dashboard/page": "app/admin/dashboard/page.js",
-  "/estimate/intercity/page": "app/estimate/intercity/page.js",
-  "/estimate/packers-movers/page": "app/estimate/packers-movers/page.js"
-}
