@@ -1,10 +1,9 @@
 {
   "/page": "app/page.js",
-  "/_not-found/page": "app/_not-found/page.js",
   "/auth/page": "app/auth/page.js",
-  "/profile/page": "app/profile/page.js",
+  "/admin/page": "app/admin/page.js",
   "/admin/login/page": "app/admin/login/page.js",
   "/admin/dashboard/page": "app/admin/dashboard/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/admin/users/page": "app/admin/users/page.js"
+  "/estimate/intercity/page": "app/estimate/intercity/page.js",
+  "/estimate/packers-movers/page": "app/estimate/packers-movers/page.js"
 }
