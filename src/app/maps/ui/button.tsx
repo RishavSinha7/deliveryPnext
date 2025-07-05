@@ -13,7 +13,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ? "bg-transparent text-blue-600 underline hover:text-blue-800 px-0 py-0"
         : "bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded";
     if (asChild && React.isValidElement(children)) {
-      return React.cloneElement(children, {
+      return React.cloneElement(children as React.ReactElement<any>, {
         ref,
         className: `${base} ${className} ${children.props.className ?? ""}`.trim(),
         ...props,

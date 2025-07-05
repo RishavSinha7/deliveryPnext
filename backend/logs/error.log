@@ -1,0 +1,27 @@
+2025-07-05 04:30:00 [ERROR]: Login error: 
+Invalid `prisma.user.findUnique()` invocation in
+D:\deliveryPnext\backend\src\controllers\authController.ts:84:38
+
+  81 const { email, password } = req.body;
+  82 
+  83 // Find user
+→ 84 const user = await prisma.user.findUnique(
+Can't reach database server at `ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech:5432`
+
+Please make sure your database server is running at `ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech:5432`. {"service":"delivery-backend","name":"PrismaClientInitializationError","clientVersion":"5.22.0"}
+PrismaClientInitializationError: 
+Invalid `prisma.user.findUnique()` invocation in
+D:\deliveryPnext\backend\src\controllers\authController.ts:84:38
+
+  81 const { email, password } = req.body;
+  82 
+  83 // Find user
+→ 84 const user = await prisma.user.findUnique(
+Can't reach database server at `ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech:5432`
+
+Please make sure your database server is running at `ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech:5432`.
+    at $n.handleRequestError (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:121:7615)
+    at $n.handleAndLogRequestError (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at l (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at login (D:\deliveryPnext\backend\src\controllers\authController.ts:84:20)

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Phone, Lock, UserPlus, LogIn } from "lucide-react";
+import { ArrowLeft, Mail, Lock, UserPlus, LogIn, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -21,21 +21,26 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 // Define the validation schema for sign in
 const signInSchema = z.object({
-  phone: z.string().min(10, { message: "Please enter a valid phone number" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   isDriver: z.boolean().default(false),
 });
 
 // Define the validation schema for sign up
 const signUpSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  phone: z.string().min(10, { message: "Please enter a valid phone number" }),
+  fullName: z.string().min(2, { message: "Full name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  phoneNumber: z.string().min(10, { message: "Please enter a valid phone number" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  confirmPassword: z.string().min(6, { message: "Please confirm your password" }),
+  confirmPassword: z.string(),
   isDriver: z.boolean().default(false),
+  terms: z.boolean().refine((val) => val === true, {
+    message: "You must accept the terms and conditions",
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -45,63 +50,104 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const [activeTab, setActiveTab] = useState("signin");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { login, register } = useAuth();
 
-  // Initialize the sign-in form
+  // Initialize forms
   const signInForm = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      phone: "",
+      email: "",
       password: "",
       isDriver: false,
     },
   });
 
-  // Initialize the sign-up form
   const signUpForm = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      name: "",
-      phone: "",
+      fullName: "",
+      email: "",
+      phoneNumber: "",
       password: "",
       confirmPassword: "",
       isDriver: false,
+      terms: false,
     },
   });
 
   // Handle sign-in form submission
-  const onSignInSubmit = (data: SignInFormValues) => {
-    console.log("Sign In Data:", data);
-    toast({
-      title: "Sign In Successful",
-      description: `Welcome back${data.isDriver ? " driver" : ""}!`,
-    });
-    
-    // Redirect to driver panel if signed in as driver, otherwise to home
-    if (data.isDriver) {
-      router.push("/driver");
-    } else {
-      router.push("/");
+  const onSignInSubmit = async (data: SignInFormValues) => {
+    setIsLoading(true);
+    try {
+      const response = await login(data.email, data.password);
+
+      if (response.success && response.data) {
+        toast({
+          title: "Sign In Successful",
+          description: `Welcome back, ${response.data.user.fullName}!`,
+        });
+        
+        // Redirect based on role or driver checkbox
+        if (data.isDriver || response.data.user.role === 'DRIVER') {
+          router.push("/driver");
+        } else if (response.data.user.role === 'ADMIN' || response.data.user.role === 'SUPER_ADMIN') {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Sign In Failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Handle sign-up form submission
-  const onSignUpSubmit = (data: SignUpFormValues) => {
-    console.log("Sign Up Data:", data);
-    toast({
-      title: "Sign Up Successful",
-      description: `Account created successfully${data.isDriver ? " as driver" : ""}!`,
-    });
-    
-    // Redirect to driver panel if signed up as driver, otherwise to home
-    if (data.isDriver) {
-      router.push("/driver");
-    } else {
-      router.push("/");
+  const onSignUpSubmit = async (data: SignUpFormValues) => {
+    setIsLoading(true);
+    try {
+      const response = await register({
+        fullName: data.fullName,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        password: data.password,
+        role: data.isDriver ? 'DRIVER' : 'CUSTOMER',
+      });
+
+      if (response.success && response.data) {
+        toast({
+          title: "Sign Up Successful",
+          description: `Account created successfully! Welcome, ${response.data.user.fullName}!`,
+        });
+        
+        // Redirect based on role
+        if (data.isDriver || response.data.user.role === 'DRIVER') {
+          router.push("/driver");
+        } else {
+          router.push("/");
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Sign Up Failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  };  return (
+  };
+
+  return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         {/* Back to Home Button */}
@@ -114,233 +160,275 @@ export default function AuthPage() {
           </Link>
         </div>
 
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+
           <div className="mb-6 text-center">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
               {activeTab === "signin" ? "Welcome Back" : "Create Account"}
             </h2>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-gray-600 mt-2">
               {activeTab === "signin" 
-                ? "Sign in to access your account" 
-                : "Sign up to start your journey with Delivery Partner"}
+                ? "Sign in to your account to continue" 
+                : "Join us and start your delivery journey"
+              }
             </p>
           </div>
 
-          <Tabs 
-            defaultValue="signin" 
-            value={activeTab} 
-            onValueChange={(value) => setActiveTab(value as "signin" | "signup")}
-            className="bg-white"
-          >
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100">
-              <TabsTrigger value="signin" className="text-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-700 data-[state=active]:text-white">Sign In</TabsTrigger>
-              <TabsTrigger value="signup" className="text-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-700 data-[state=active]:text-white">Sign Up</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signin" className="space-y-4">
-              <Form {...signInForm}>
-                <form onSubmit={signInForm.handleSubmit(onSignInSubmit)} className="space-y-4">
-                  <FormField
-                    control={signInForm.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <Phone className="h-4 w-4 text-gray-400" />
-                            </div>
-                            <Input placeholder="9876543210" className="pl-10 focus-visible:ring-blue-500" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-blue-700" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={signInForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <Lock className="h-4 w-4 text-gray-400" />
-                            </div>
-                            <Input type="password" placeholder="Enter your password" className="pl-10 focus-visible:ring-blue-500" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-blue-700" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={signInForm.control}
-                    name="isDriver"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+          {/* Sign In Tab */}
+          <TabsContent value="signin">
+            <Form {...signInForm}>
+              <form onSubmit={signInForm.handleSubmit(onSignInSubmit)} className="space-y-4">
+                <FormField
+                  control={signInForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input 
+                            placeholder="your@email.com" 
+                            className="pl-10 focus-visible:ring-blue-500" 
+                            {...field} 
                           />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <Label className="text-sm font-medium text-gray-700">
-                            Sign in as driver
-                          </Label>
                         </div>
-                      </FormItem>
-                    )}
-                  />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl font-medium"
-                  >
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Sign In
-                  </Button>
-                </form>
-              </Form>
-
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  Don't have an account?{" "}
-                  <button 
-                    type="button" 
-                    onClick={() => setActiveTab("signup")} 
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Create one
-                  </button>
-                </p>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="signup" className="space-y-4">
-              <Form {...signUpForm}>
-                <form onSubmit={signUpForm.handleSubmit(onSignUpSubmit)} className="space-y-4">
-                  <FormField
-                    control={signUpForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Doe" className="focus-visible:ring-blue-500" {...field} />
-                        </FormControl>
-                        <FormMessage className="text-blue-700" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={signUpForm.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <Phone className="h-4 w-4 text-gray-400" />
-                            </div>
-                            <Input placeholder="9876543210" className="pl-10 focus-visible:ring-blue-500" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-blue-700" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={signUpForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <Lock className="h-4 w-4 text-gray-400" />
-                            </div>
-                            <Input type="password" placeholder="Create a password" className="pl-10 focus-visible:ring-blue-500" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-blue-700" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={signUpForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <Lock className="h-4 w-4 text-gray-400" />
-                            </div>
-                            <Input type="password" placeholder="Confirm your password" className="pl-10 focus-visible:ring-blue-500" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-blue-700" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={signUpForm.control}
-                    name="isDriver"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                <FormField
+                  control={signInForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input 
+                            type="password" 
+                            placeholder="Your password" 
+                            className="pl-10 focus-visible:ring-blue-500" 
+                            {...field} 
                           />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <Label className="text-sm font-medium text-gray-700">
-                            Register as a driver
-                          </Label>
                         </div>
-                      </FormItem>
-                    )}
-                  />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl font-medium"
-                  >
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Create Account
-                  </Button>
-                </form>
-              </Form>
+                <FormField
+                  control={signInForm.control}
+                  name="isDriver"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Sign in as Driver</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
 
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <button 
-                    type="button" 
-                    onClick={() => setActiveTab("signin")} 
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Sign in
-                  </button>
-                </p>
-              </div>            </TabsContent>
-          </Tabs>
-        </div>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Signing In..." : (
+                    <>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Sign In
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </TabsContent>
+
+          {/* Sign Up Tab */}
+          <TabsContent value="signup">
+            <Form {...signUpForm}>
+              <form onSubmit={signUpForm.handleSubmit(onSignUpSubmit)} className="space-y-4">
+                <FormField
+                  control={signUpForm.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input 
+                            placeholder="John Doe" 
+                            className="pl-10 focus-visible:ring-blue-500" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input 
+                            placeholder="your@email.com" 
+                            className="pl-10 focus-visible:ring-blue-500" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input 
+                            placeholder="+1234567890" 
+                            className="pl-10 focus-visible:ring-blue-500" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input 
+                            type="password" 
+                            placeholder="Create a password" 
+                            className="pl-10 focus-visible:ring-blue-500" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input 
+                            type="password" 
+                            placeholder="Confirm your password" 
+                            className="pl-10 focus-visible:ring-blue-500" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="isDriver"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Register as Driver</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="terms"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          I agree to the{" "}
+                          <Link href="/terms" className="text-blue-600 hover:underline">
+                            Terms and Conditions
+                          </Link>
+                        </FormLabel>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating Account..." : (
+                    <>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Create Account
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

@@ -4,14 +4,80 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
-import { login } from "./actions";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// Define the validation schema for login
+const loginSchema = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login: React.FC = () => {
   const router = useRouter();
   const [role, setRole] = useState<"admin" | "vendor">("admin");
-  const [state, loginAction] = useActionState(login, undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      console.log('Admin login: Attempting login for:', data.email);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      console.log('Admin login: Response status:', response.status);
+      const result = await response.json();
+      console.log('Admin login: Response data:', result);
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Login failed');
+      }
+
+      // Check if user has admin privileges
+      const user = result.data.user;
+      if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+        throw new Error('Access denied. Admin privileges required.');
+      }
+
+      // Store the JWT token for subsequent API calls
+      localStorage.setItem('adminToken', result.data.token);
+      
+      console.log('Admin login successful, token stored');
+
+      // For admin login, we'll redirect to dashboard
+      router.push('/admin/dashboard');
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error instanceof Error ? error.message : 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div
@@ -61,28 +127,40 @@ const Login: React.FC = () => {
               </button>
             </div>
 
-            <form className="flex flex-col gap-4" action={loginAction}>
+            <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                  {error}
+                </div>
+              )}
+
               <input
-                name="email"
+                {...form.register("email")}
                 type="text"
                 placeholder="Login id"
                 className="w-full bg-white px-4 py-2 rounded border border-gray-300 text-black font-bold focus:outline-none focus:ring-2 focus:ring-purple-400"
               />
-              {state?.errors?.email && (
-                <p className="text-red-500">{state.errors.email}</p>
+              {form.formState.errors.email && (
+                <p className="text-red-500">{form.formState.errors.email.message}</p>
               )}
 
               <input
-                name="password"
+                {...form.register("password")}
                 type="password"
                 placeholder="Login password"
                 className="w-full bg-white px-4 py-2 rounded border border-gray-300 text-black font-bold focus:outline-none focus:ring-2 focus:ring-purple-400"
               />
-              {state?.errors?.password && (
-                <p className="text-red-500">{state.errors.password}</p>
+              {form.formState.errors.password && (
+                <p className="text-red-500">{form.formState.errors.password.message}</p>
               )}
 
-              <SubmitButton />
+              <button
+                disabled={isLoading}
+                type="submit"
+                className="w-full bg-purple-600 text-white py-2 rounded-full hover:bg-purple-700 transition duration-200 disabled:opacity-50"
+              >
+                {isLoading ? "Logging in..." : "Login"}
+              </button>
 
               <div className="text-right text-sm mt-[-10px]">
                 <a href="#" className="text-blue-600 hover:underline">
@@ -96,19 +174,5 @@ const Login: React.FC = () => {
     </div>
   );
 };
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      disabled={pending}
-      type="submit"
-      className="w-full bg-purple-600 text-white py-2 rounded-full hover:bg-purple-700 transition duration-200 disabled:opacity-50"
-    >
-      {pending ? "Logging in..." : "Login"}
-    </button>
-  );
-}
 
 export default Login;

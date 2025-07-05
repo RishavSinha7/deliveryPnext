@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -8,116 +8,192 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DatePicker } from "@/components/admin/date-picker"
-import { Download, Filter, Search } from "lucide-react"
+import { Download, Filter, Search, Loader2, Eye, Edit, User, Phone } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { adminBookingsApi } from "@/lib/admin-api"
+import { useToast } from "@/hooks/use-toast"
+
+interface Booking {
+  id: string
+  bookingNumber: string
+  serviceType: string
+  status: string
+  pickupAddress: string
+  dropoffAddress: string
+  pickupDateTime: string
+  estimatedFare: number
+  actualFare?: number
+  paymentMethod: string
+  paymentStatus: string
+  createdAt: string
+  customer: {
+    fullName: string
+    phoneNumber: string
+  }
+  driver?: {
+    user: {
+      fullName: string
+      phoneNumber: string
+    }
+  }
+}
 
 export default function BookingsPage() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined)
   const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const { toast } = useToast()
 
-  const bookings = [
-    {
-      id: "B-1234",
-      customer: "John Smith",
-      driver: "David Johnson",
-      date: "2023-05-21",
-      amount: "$45.00",
-      status: "completed",
-    },
-    {
-      id: "B-1235",
-      customer: "Sarah Williams",
-      driver: "Michael Brown",
-      date: "2023-05-21",
-      amount: "$32.50",
-      status: "completed",
-    },
-    {
-      id: "B-1236",
-      customer: "Robert Davis",
-      driver: "James Wilson",
-      date: "2023-05-21",
-      amount: "$28.75",
-      status: "in-progress",
-    },
-    {
-      id: "B-1237",
-      customer: "Jennifer Miller",
-      driver: "Pending Assignment",
-      date: "2023-05-22",
-      amount: "$52.25",
-      status: "pending",
-    },
-    {
-      id: "B-1238",
-      customer: "Michael Garcia",
-      driver: "Pending Assignment",
-      date: "2023-05-22",
-      amount: "$38.00",
-      status: "pending",
-    },
-    {
-      id: "B-1239",
-      customer: "Lisa Rodriguez",
-      driver: "Thomas Anderson",
-      date: "2023-05-20",
-      amount: "$42.75",
-      status: "completed",
-    },
-    {
-      id: "B-1240",
-      customer: "William Martinez",
-      driver: "Christopher Lee",
-      date: "2023-05-20",
-      amount: "$35.50",
-      status: "completed",
-    },
-    {
-      id: "B-1241",
-      customer: "Elizabeth Taylor",
-      driver: "Daniel White",
-      date: "2023-05-19",
-      amount: "$48.25",
-      status: "completed",
-    },
-    {
-      id: "B-1242",
-      customer: "James Johnson",
-      driver: "Matthew Harris",
-      date: "2023-05-19",
-      amount: "$29.75",
-      status: "cancelled",
-    },
-    {
-      id: "B-1243",
-      customer: "Patricia Brown",
-      driver: "Andrew Wilson",
-      date: "2023-05-18",
-      amount: "$37.50",
-      status: "completed",
-    },
-  ]
+  // Fetch bookings data
+  useEffect(() => {
+    fetchBookings()
+  }, [])
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await adminBookingsApi.getBookings(1, 100) // Get more bookings for better filtering
+      if (response.success) {
+        setBookings(response.data?.bookings || [])
+      } else {
+        setError(response.message || 'Failed to fetch bookings')
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to fetch bookings',
+          variant: "destructive"
+        })
+      }
+    } catch (err) {
+      const errorMessage = 'Failed to fetch bookings'
+      setError(errorMessage)
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Filter bookings based on search term, status, and date range
+  const filteredBookings = bookings.filter(booking => {
+    const matchesSearch = !searchTerm || 
+      booking.bookingNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.customer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.driver?.user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.pickupAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.dropoffAddress.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesStatus = statusFilter === "all" || booking.status.toLowerCase() === statusFilter
+    
+    const bookingDate = new Date(booking.pickupDateTime)
+    const matchesDateRange = (!startDate || bookingDate >= startDate) && 
+                            (!endDate || bookingDate <= endDate)
+    
+    return matchesSearch && matchesStatus && matchesDateRange
+  })
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
+    switch (status.toUpperCase()) {
+      case "COMPLETED":
         return <Badge className="bg-green-500">Completed</Badge>
-      case "in-progress":
+      case "IN_PROGRESS":
+      case "ONGOING":
         return <Badge className="bg-blue-500">In Progress</Badge>
-      case "pending":
+      case "PENDING":
         return <Badge className="bg-yellow-500">Pending</Badge>
-      case "cancelled":
+      case "CANCELLED":
         return <Badge className="bg-red-500">Cancelled</Badge>
+      case "ASSIGNED":
+        return <Badge className="bg-purple-500">Assigned</Badge>
       default:
-        return <Badge>{status}</Badge>
+        return <Badge variant="outline">{status}</Badge>
     }
+  }
+
+  const handleStatusUpdate = async (bookingId: string, newStatus: string) => {
+    try {
+      const response = await adminBookingsApi.updateBookingStatus(bookingId, newStatus)
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Booking status updated successfully"
+        })
+        fetchBookings() // Refresh the data
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to update booking status',
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update booking status",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleExportCSV = () => {
+    // Create CSV content
+    const headers = ['Booking ID', 'Customer', 'Driver', 'Pickup Date', 'Pickup Address', 'Dropoff Address', 'Amount', 'Status']
+    const csvContent = [
+      headers.join(','),
+      ...filteredBookings.map(booking => [
+        booking.bookingNumber,
+        booking.customer.fullName,
+        booking.driver?.user.fullName || 'Unassigned',
+        new Date(booking.pickupDateTime).toLocaleDateString(),
+        `"${booking.pickupAddress}"`,
+        `"${booking.dropoffAddress}"`,
+        booking.actualFare || booking.estimatedFare,
+        booking.status
+      ].join(','))
+    ].join('\n')
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `bookings-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading bookings...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={fetchBookings}>Try Again</Button>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Booking Details</h1>
-        <Button>
+        <Button onClick={handleExportCSV}>
           <Download className="mr-2 h-4 w-4" />
           Export CSV
         </Button>
@@ -151,15 +227,16 @@ export default function BookingsPage() {
               <label htmlFor="status" className="text-sm font-medium">
                 Status
               </label>
-              <Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger id="status">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
@@ -170,7 +247,14 @@ export default function BookingsPage() {
               </label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="search" type="search" placeholder="Search bookings..." className="pl-8" />
+                <Input 
+                  id="search" 
+                  type="search" 
+                  placeholder="Search bookings..." 
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -196,13 +280,13 @@ export default function BookingsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bookings.map((booking) => (
+              {filteredBookings.map((booking) => (
                 <TableRow key={booking.id}>
-                  <TableCell className="font-medium">{booking.id}</TableCell>
-                  <TableCell>{booking.customer}</TableCell>
-                  <TableCell>{booking.driver}</TableCell>
-                  <TableCell>{booking.date}</TableCell>
-                  <TableCell>{booking.amount}</TableCell>
+                  <TableCell className="font-medium">{booking.bookingNumber}</TableCell>
+                  <TableCell>{booking.customer.fullName}</TableCell>
+                  <TableCell>{booking.driver?.user.fullName || 'Unassigned'}</TableCell>
+                  <TableCell>{new Date(booking.pickupDateTime).toLocaleDateString()}</TableCell>
+                  <TableCell>${(booking.actualFare || booking.estimatedFare).toFixed(2)}</TableCell>
                   <TableCell>{getStatusBadge(booking.status)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -213,10 +297,46 @@ export default function BookingsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit Booking</DropdownMenuItem>
-                        <DropdownMenuItem>Contact Customer</DropdownMenuItem>
-                        <DropdownMenuItem>Contact Driver</DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        {booking.status === 'PENDING' && (
+                          <DropdownMenuItem onClick={() => handleStatusUpdate(booking.id, 'ASSIGNED')}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Assign Driver
+                          </DropdownMenuItem>
+                        )}
+                        {booking.status === 'ASSIGNED' && (
+                          <DropdownMenuItem onClick={() => handleStatusUpdate(booking.id, 'IN_PROGRESS')}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Start Trip
+                          </DropdownMenuItem>
+                        )}
+                        {booking.status === 'IN_PROGRESS' && (
+                          <DropdownMenuItem onClick={() => handleStatusUpdate(booking.id, 'COMPLETED')}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Complete Trip
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem>
+                          <User className="mr-2 h-4 w-4" />
+                          Contact Customer
+                        </DropdownMenuItem>
+                        {booking.driver && (
+                          <DropdownMenuItem>
+                            <Phone className="mr-2 h-4 w-4" />
+                            Contact Driver
+                          </DropdownMenuItem>
+                        )}
+                        {booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED' && (
+                          <DropdownMenuItem 
+                            onClick={() => handleStatusUpdate(booking.id, 'CANCELLED')}
+                            className="text-red-600"
+                          >
+                            Cancel Booking
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
