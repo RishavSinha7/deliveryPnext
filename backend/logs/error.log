@@ -25,3 +25,30 @@ Please make sure your database server is running at `ep-sparkling-cloud-a8i63wyv
     at $n.request (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
     at l (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
     at login (D:\deliveryPnext\backend\src\controllers\authController.ts:84:20)
+2025-07-05 06:05:53 [ERROR]: Get all vehicles error: 
+Invalid `prisma.vehicle.findMany()` invocation in
+D:\deliveryPnext\backend\src\controllers\vehicleController.ts:86:45
+
+  83 // Get all vehicles (Admin)
+  84 async getAllVehicles(req: AuthRequest, res: Response): Promise<Response | void> {
+  85   try {
+→ 86     const vehicles = await prisma.vehicle.findMany(
+Can't reach database server at `ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech:5432`
+
+Please make sure your database server is running at `ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech:5432`. {"service":"delivery-backend","name":"PrismaClientKnownRequestError","code":"P1001","clientVersion":"5.22.0","meta":{"modelName":"Vehicle","database_host":"ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech","database_port":5432}}
+PrismaClientKnownRequestError: 
+Invalid `prisma.vehicle.findMany()` invocation in
+D:\deliveryPnext\backend\src\controllers\vehicleController.ts:86:45
+
+  83 // Get all vehicles (Admin)
+  84 async getAllVehicles(req: AuthRequest, res: Response): Promise<Response | void> {
+  85   try {
+→ 86     const vehicles = await prisma.vehicle.findMany(
+Can't reach database server at `ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech:5432`
+
+Please make sure your database server is running at `ep-sparkling-cloud-a8i63wyv-pooler.eastus2.azure.neon.tech:5432`.
+    at $n.handleRequestError (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at l (D:\deliveryPnext\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at getAllVehicles (D:\deliveryPnext\backend\src\controllers\vehicleController.ts:86:24)

@@ -44,6 +44,7 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:3003',
+    'http://localhost:3004',
     config.frontendUrl
   ],
   credentials: true,
