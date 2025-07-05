@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Check, Edit, Plus, Search, X } from "lucide-react"
+import { Check, Edit, Plus, Search, X, Loader2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -19,135 +19,203 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { adminVehiclesApi } from "@/lib/admin-api"
+import { useToast } from "@/hooks/use-toast"
+
+interface Vehicle {
+  id: string
+  vehicleType: string
+  vehicleNumber: string
+  vehicleModel: string
+  yearOfManufacture: string
+  insuranceNumber: string
+  isActive: boolean
+  isVerified: boolean
+  registrationDocument?: string
+  insuranceDocument?: string
+  pollutionDocument?: string
+  createdAt: string
+  updatedAt: string
+  driverProfile?: {
+    user: {
+      fullName: string
+      phoneNumber: string
+    }
+  }
+}
 
 export default function VehiclesPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [typeFilter, setTypeFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const { toast } = useToast()
 
-  const vehicles = [
-    {
-      id: "V-2001",
-      model: "Toyota Camry",
-      type: "Sedan",
-      year: 2020,
-      licensePlate: "ABC-1234",
-      driver: "David Johnson",
-      status: "active",
-      lastMaintenance: "2023-04-15",
-    },
-    {
-      id: "V-2002",
-      model: "Honda CR-V",
-      type: "SUV",
-      year: 2021,
-      licensePlate: "DEF-5678",
-      driver: "Michael Brown",
-      status: "active",
-      lastMaintenance: "2023-04-22",
-    },
-    {
-      id: "V-2003",
-      model: "Toyota Corolla",
-      type: "Sedan",
-      year: 2019,
-      licensePlate: "GHI-9012",
-      driver: "Sarah Davis",
-      status: "active",
-      lastMaintenance: "2023-04-10",
-    },
-    {
-      id: "V-2004",
-      model: "Honda Odyssey",
-      type: "Minivan",
-      year: 2022,
-      licensePlate: "JKL-3456",
-      driver: "James Wilson",
-      status: "maintenance",
-      lastMaintenance: "2023-05-18",
-    },
-    {
-      id: "V-2005",
-      model: "Mercedes-Benz E-Class",
-      type: "Luxury",
-      year: 2021,
-      licensePlate: "MNO-7890",
-      driver: "Robert Taylor",
-      status: "active",
-      lastMaintenance: "2023-04-30",
-    },
-    {
-      id: "V-2006",
-      model: "Toyota Prius",
-      type: "Sedan",
-      year: 2020,
-      licensePlate: "PQR-1234",
-      driver: "Thomas Anderson",
-      status: "active",
-      lastMaintenance: "2023-05-05",
-    },
-    {
-      id: "V-2007",
-      model: "Ford Explorer",
-      type: "SUV",
-      year: 2021,
-      licensePlate: "STU-5678",
-      driver: "Christopher Lee",
-      status: "inactive",
-      lastMaintenance: "2023-03-15",
-    },
-    {
-      id: "V-2008",
-      model: "Toyota Camry",
-      type: "Sedan",
-      year: 2022,
-      licensePlate: "VWX-9012",
-      driver: "Daniel White",
-      status: "pending-approval",
-      lastMaintenance: "2023-05-10",
-    },
-  ]
+  // Fetch vehicles data
+  useEffect(() => {
+    fetchVehicles()
+  }, [])
 
-  const pendingVehicles = [
-    {
-      id: "V-2009",
-      model: "Honda Civic",
-      type: "Sedan",
-      year: 2021,
-      licensePlate: "YZA-3456",
-      driver: "Jennifer Adams",
-      status: "pending-approval",
-      submittedDate: "2023-05-18",
-    },
-    {
-      id: "V-2010",
-      model: "Toyota RAV4",
-      type: "SUV",
-      year: 2022,
-      licensePlate: "BCD-7890",
-      driver: "William Scott",
-      status: "pending-approval",
-      submittedDate: "2023-05-19",
-    },
-  ]
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-500">Active</Badge>
-      case "inactive":
-        return <Badge variant="outline">Inactive</Badge>
-      case "maintenance":
-        return <Badge variant="secondary">Maintenance</Badge>
-      case "pending-approval":
-        return <Badge className="bg-yellow-500">Pending Approval</Badge>
-      default:
-        return <Badge>{status}</Badge>
+  const fetchVehicles = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await adminVehiclesApi.getVehicles()
+      if (response.success) {
+        setVehicles(response.data || [])
+      } else {
+        setError(response.message || 'Failed to fetch vehicles')
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to fetch vehicles',
+          variant: "destructive"
+        })
+      }
+    } catch (err) {
+      const errorMessage = 'Failed to fetch vehicles'
+      setError(errorMessage)
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleEditVehicle = (vehicle: any) => {
+  // Filter vehicles based on search term, type, and status
+  const filteredVehicles = vehicles.filter(vehicle => {
+    const matchesSearch = !searchTerm || 
+      vehicle.vehicleModel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.driverProfile?.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesType = typeFilter === "all" || vehicle.vehicleType.toLowerCase() === typeFilter
+    
+    const matchesStatus = statusFilter === "all" || 
+      (statusFilter === 'active' && vehicle.isActive && vehicle.isVerified) ||
+      (statusFilter === 'inactive' && !vehicle.isActive) ||
+      (statusFilter === 'pending' && !vehicle.isVerified)
+    
+    return matchesSearch && matchesType && matchesStatus
+  })
+
+  // Get pending vehicles (not verified)
+  const pendingVehicles = vehicles.filter(vehicle => !vehicle.isVerified)
+
+  const getStatusBadge = (vehicle: Vehicle) => {
+    if (!vehicle.isVerified) {
+      return <Badge className="bg-yellow-500">Pending Approval</Badge>
+    } else if (vehicle.isActive) {
+      return <Badge className="bg-green-500">Active</Badge>
+    } else {
+      return <Badge variant="outline">Inactive</Badge>
+    }
+  }
+
+  const handleEditVehicle = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle)
     setIsEditDialogOpen(true)
+  }
+
+  const handleApproveVehicle = async (vehicleId: string) => {
+    try {
+      const response = await adminVehiclesApi.updateVehicleApproval(vehicleId, true)
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Vehicle approved successfully"
+        })
+        fetchVehicles() // Refresh the data
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to approve vehicle',
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to approve vehicle",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleRejectVehicle = async (vehicleId: string) => {
+    try {
+      const response = await adminVehiclesApi.updateVehicleApproval(vehicleId, false)
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Vehicle rejected successfully"
+        })
+        fetchVehicles() // Refresh the data
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to reject vehicle',
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reject vehicle",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleStatusToggle = async (vehicleId: string, currentStatus: boolean) => {
+    try {
+      const response = await adminVehiclesApi.updateVehicleStatus(vehicleId, !currentStatus)
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: `Vehicle ${!currentStatus ? 'activated' : 'deactivated'} successfully`
+        })
+        fetchVehicles() // Refresh the data
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to update vehicle status',
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update vehicle status",
+        variant: "destructive"
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading vehicles...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={fetchVehicles}>Try Again</Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -234,16 +302,16 @@ export default function VehiclesPage() {
               <label htmlFor="type-filter" className="text-sm font-medium">
                 Vehicle Type
               </label>
-              <Select>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger id="type-filter">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All types</SelectItem>
-                  <SelectItem value="sedan">Sedan</SelectItem>
-                  <SelectItem value="suv">SUV</SelectItem>
-                  <SelectItem value="minivan">Minivan</SelectItem>
-                  <SelectItem value="luxury">Luxury</SelectItem>
+                  <SelectItem value="car">Car</SelectItem>
+                  <SelectItem value="bike">Bike</SelectItem>
+                  <SelectItem value="truck">Truck</SelectItem>
+                  <SelectItem value="auto">Auto</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -251,7 +319,7 @@ export default function VehiclesPage() {
               <label htmlFor="status-filter" className="text-sm font-medium">
                 Status
               </label>
-              <Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger id="status-filter">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
@@ -259,8 +327,7 @@ export default function VehiclesPage() {
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                  <SelectItem value="pending-approval">Pending Approval</SelectItem>
+                  <SelectItem value="pending">Pending Approval</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -270,7 +337,14 @@ export default function VehiclesPage() {
               </label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="search-vehicles" type="search" placeholder="Search vehicles..." className="pl-8" />
+                <Input 
+                  id="search-vehicles" 
+                  type="search" 
+                  placeholder="Search vehicles..." 
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -299,21 +373,31 @@ export default function VehiclesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vehicles.map((vehicle) => (
+                  {filteredVehicles.map((vehicle) => (
                     <TableRow key={vehicle.id}>
                       <TableCell className="font-medium">{vehicle.id}</TableCell>
-                      <TableCell>{vehicle.model}</TableCell>
-                      <TableCell>{vehicle.type}</TableCell>
-                      <TableCell>{vehicle.licensePlate}</TableCell>
-                      <TableCell>{vehicle.driver}</TableCell>
-                      <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
-                      <TableCell>{vehicle.lastMaintenance}</TableCell>
+                      <TableCell>{vehicle.vehicleModel}</TableCell>
+                      <TableCell className="capitalize">{vehicle.vehicleType}</TableCell>
+                      <TableCell>{vehicle.vehicleNumber}</TableCell>
+                      <TableCell>{vehicle.driverProfile?.user.fullName || 'Unassigned'}</TableCell>
+                      <TableCell>{getStatusBadge(vehicle)}</TableCell>
+                      <TableCell>{new Date(vehicle.updatedAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Button variant="outline" size="sm" onClick={() => handleEditVehicle(vehicle)}>
                             <Edit className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
                           </Button>
+                          {vehicle.isVerified && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleStatusToggle(vehicle.id, vehicle.isActive)}
+                              className={vehicle.isActive ? "bg-red-50 hover:bg-red-100 text-red-600" : "bg-green-50 hover:bg-green-100 text-green-600"}
+                            >
+                              {vehicle.isActive ? 'Deactivate' : 'Activate'}
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -342,17 +426,18 @@ export default function VehiclesPage() {
                   {pendingVehicles.map((vehicle) => (
                     <TableRow key={vehicle.id}>
                       <TableCell className="font-medium">{vehicle.id}</TableCell>
-                      <TableCell>{vehicle.model}</TableCell>
-                      <TableCell>{vehicle.type}</TableCell>
-                      <TableCell>{vehicle.licensePlate}</TableCell>
-                      <TableCell>{vehicle.driver}</TableCell>
-                      <TableCell>{vehicle.submittedDate}</TableCell>
+                      <TableCell>{vehicle.vehicleModel}</TableCell>
+                      <TableCell className="capitalize">{vehicle.vehicleType}</TableCell>
+                      <TableCell>{vehicle.vehicleNumber}</TableCell>
+                      <TableCell>{vehicle.driverProfile?.user.fullName || 'Unassigned'}</TableCell>
+                      <TableCell>{new Date(vehicle.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Button
                             variant="outline"
                             size="sm"
                             className="bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700"
+                            onClick={() => handleApproveVehicle(vehicle.id)}
                           >
                             <Check className="h-4 w-4" />
                             <span className="sr-only">Approve</span>
@@ -361,6 +446,7 @@ export default function VehiclesPage() {
                             variant="outline"
                             size="sm"
                             className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700"
+                            onClick={() => handleRejectVehicle(vehicle.id)}
                           >
                             <X className="h-4 w-4" />
                             <span className="sr-only">Reject</span>
@@ -387,19 +473,19 @@ export default function VehiclesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-model">Vehicle Model</Label>
-                  <Input id="edit-model" defaultValue={selectedVehicle.model} />
+                  <Input id="edit-model" defaultValue={selectedVehicle.vehicleModel} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-type">Vehicle Type</Label>
-                  <Select defaultValue={selectedVehicle.type.toLowerCase()}>
+                  <Select defaultValue={selectedVehicle.vehicleType}>
                     <SelectTrigger id="edit-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="sedan">Sedan</SelectItem>
-                      <SelectItem value="suv">SUV</SelectItem>
-                      <SelectItem value="minivan">Minivan</SelectItem>
-                      <SelectItem value="luxury">Luxury</SelectItem>
+                      <SelectItem value="car">Car</SelectItem>
+                      <SelectItem value="bike">Bike</SelectItem>
+                      <SelectItem value="truck">Truck</SelectItem>
+                      <SelectItem value="auto">Auto</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -407,44 +493,40 @@ export default function VehiclesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-year">Year</Label>
-                  <Input id="edit-year" type="number" defaultValue={selectedVehicle.year} />
+                  <Input id="edit-year" type="number" defaultValue={selectedVehicle.yearOfManufacture} />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-license">License Plate</Label>
-                  <Input id="edit-license" defaultValue={selectedVehicle.licensePlate} />
+                  <Label htmlFor="edit-license">Vehicle Number</Label>
+                  <Input id="edit-license" defaultValue={selectedVehicle.vehicleNumber} />
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-driver">Assign Driver</Label>
+                <Label htmlFor="edit-driver">Assigned Driver</Label>
                 <Select>
                   <SelectTrigger id="edit-driver">
-                    <SelectValue placeholder={selectedVehicle.driver} />
+                    <SelectValue placeholder={selectedVehicle.driverProfile?.user.fullName || 'Unassigned'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="david">David Johnson</SelectItem>
-                    <SelectItem value="michael">Michael Brown</SelectItem>
-                    <SelectItem value="sarah">Sarah Davis</SelectItem>
-                    <SelectItem value="james">James Wilson</SelectItem>
-                    <SelectItem value="robert">Robert Taylor</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {/* TODO: Load available drivers from API */}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-status">Status</Label>
-                <Select defaultValue={selectedVehicle.status}>
+                <Select defaultValue={selectedVehicle.isActive ? 'active' : 'inactive'}>
                   <SelectTrigger id="edit-status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-maintenance">Last Maintenance Date</Label>
-                <Input id="edit-maintenance" type="date" defaultValue={selectedVehicle.lastMaintenance} />
+                <Label htmlFor="edit-insurance">Insurance Number</Label>
+                <Input id="edit-insurance" defaultValue={selectedVehicle.insuranceNumber} />
               </div>
             </div>
           )}

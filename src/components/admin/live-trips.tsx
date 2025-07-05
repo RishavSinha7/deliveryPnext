@@ -5,8 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-export function LiveTrips() {
-  const trips = [
+interface LiveTripsProps {
+  trips?: any[]
+}
+
+export function LiveTrips({ trips: propTrips }: LiveTripsProps) {
+  // Use provided trips or fallback to mock data
+  const trips = propTrips || [
     {
       id: "T-5678",
       customer: "Emily Johnson",

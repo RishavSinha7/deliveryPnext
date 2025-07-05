@@ -17,9 +17,15 @@ import { logout } from "@/app/admin/login/actions"
 
 interface HeaderProps {
   onMobileMenuClick: () => void
+  adminData?: {
+    email?: string;
+    fullName?: string;
+    role?: string;
+    token?: string;
+  }
 }
 
-export function Header({ onMobileMenuClick }: HeaderProps) {
+export function Header({ onMobileMenuClick, adminData }: HeaderProps) {
   const [notificationCount, setNotificationCount] = useState(3)
 
   return (

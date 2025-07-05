@@ -1,13 +1,13 @@
- "use client"
+"use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Edit, Plus, Search, Trash } from "lucide-react"
+import { Check, Edit, Plus, Search, X, Loader2, Eye, Phone, Car } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -19,221 +19,229 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { adminDriversApi } from "@/lib/admin-api"
+import { useToast } from "@/hooks/use-toast"
+
+interface Driver {
+  id: string
+  user: {
+    fullName: string
+    email: string
+    phoneNumber: string
+    isActive: boolean
+  }
+  licenseNumber: string
+  isVerified: boolean
+  isActive: boolean
+  isOnline: boolean
+  rating?: number
+  totalTrips: number
+  totalEarnings: number
+  createdAt: string
+  vehicles?: any[]
+}
 
 export default function DriversPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedDriver, setSelectedDriver] = useState<any>(null)
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null)
+  const [drivers, setDrivers] = useState<Driver[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [verificationFilter, setVerificationFilter] = useState("all")
+  const { toast } = useToast()
 
-  const drivers = [
-    {
-      id: "D-1001",
-      name: "David Johnson",
-      district: "North",
-      location: "123 Main St, North District",
-      vehicleType: "Sedan",
-      mobile: "+1 (555) 123-4567",
-      status: "active",
-      trips: 145,
-      rating: 4.8,
-    },
-    {
-      id: "D-1002",
-      name: "Michael Brown",
-      district: "South",
-      location: "456 Oak Ave, South District",
-      vehicleType: "SUV",
-      mobile: "+1 (555) 234-5678",
-      status: "active",
-      trips: 98,
-      rating: 4.6,
-    },
-    {
-      id: "D-1003",
-      name: "Sarah Davis",
-      district: "East",
-      location: "789 Pine Rd, East District",
-      vehicleType: "Sedan",
-      mobile: "+1 (555) 345-6789",
-      status: "active",
-      trips: 112,
-      rating: 4.9,
-    },
-    {
-      id: "D-1004",
-      name: "James Wilson",
-      district: "West",
-      location: "321 Elm St, West District",
-      vehicleType: "Minivan",
-      mobile: "+1 (555) 456-7890",
-      status: "inactive",
-      trips: 87,
-      rating: 4.5,
-    },
-    {
-      id: "D-1005",
-      name: "Robert Taylor",
-      district: "Central",
-      location: "555 Cedar Ln, Central District",
-      vehicleType: "Luxury",
-      mobile: "+1 (555) 567-8901",
-      status: "active",
-      trips: 156,
-      rating: 4.7,
-    },
-    {
-      id: "D-1006",
-      name: "Thomas Anderson",
-      district: "North",
-      location: "777 Maple Dr, North District",
-      vehicleType: "Sedan",
-      mobile: "+1 (555) 678-9012",
-      status: "active",
-      trips: 132,
-      rating: 4.8,
-    },
-    {
-      id: "D-1007",
-      name: "Christopher Lee",
-      district: "South",
-      location: "888 Birch Blvd, South District",
-      vehicleType: "SUV",
-      mobile: "+1 (555) 789-0123",
-      status: "blocked",
-      trips: 65,
-      rating: 3.9,
-    },
-    {
-      id: "D-1008",
-      name: "Daniel White",
-      district: "East",
-      location: "999 Spruce St, East District",
-      vehicleType: "Sedan",
-      mobile: "+1 (555) 890-1234",
-      status: "active",
-      trips: 108,
-      rating: 4.6,
-    },
-  ]
+  // Fetch drivers data
+  useEffect(() => {
+    fetchDrivers()
+  }, [])
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-500">Active</Badge>
-      case "inactive":
-        return <Badge variant="outline">Inactive</Badge>
-      case "blocked":
-        return <Badge variant="destructive">Blocked</Badge>
-      default:
-        return <Badge>{status}</Badge>
+  const fetchDrivers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await adminDriversApi.getDrivers()
+      if (response.success) {
+        setDrivers(response.data || [])
+      } else {
+        setError(response.message || 'Failed to fetch drivers')
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to fetch drivers',
+          variant: "destructive"
+        })
+      }
+    } catch (err) {
+      const errorMessage = 'Failed to fetch drivers'
+      setError(errorMessage)
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleEditDriver = (driver: any) => {
+  // Filter drivers based on search term and filters
+  const filteredDrivers = drivers.filter(driver => {
+    const matchesSearch = !searchTerm || 
+      driver.user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.user.phoneNumber.includes(searchTerm) ||
+      driver.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesStatus = statusFilter === "all" || 
+      (statusFilter === 'active' && driver.isActive && driver.user.isActive) ||
+      (statusFilter === 'inactive' && (!driver.isActive || !driver.user.isActive)) ||
+      (statusFilter === 'online' && driver.isOnline) ||
+      (statusFilter === 'offline' && !driver.isOnline)
+    
+    const matchesVerification = verificationFilter === "all" ||
+      (verificationFilter === 'verified' && driver.isVerified) ||
+      (verificationFilter === 'pending' && !driver.isVerified)
+    
+    return matchesSearch && matchesStatus && matchesVerification
+  })
+
+  // Get pending drivers (not verified)
+  const pendingDrivers = drivers.filter(driver => !driver.isVerified)
+
+  const getStatusBadge = (driver: Driver) => {
+    if (!driver.isVerified) {
+      return <Badge className="bg-yellow-500">Pending Verification</Badge>
+    } else if (!driver.isActive || !driver.user.isActive) {
+      return <Badge variant="outline">Inactive</Badge>
+    } else if (driver.isOnline) {
+      return <Badge className="bg-green-500">Online</Badge>
+    } else {
+      return <Badge variant="secondary">Offline</Badge>
+    }
+  }
+
+  const handleEditDriver = (driver: Driver) => {
     setSelectedDriver(driver)
     setIsEditDialogOpen(true)
+  }
+
+  const handleApproveDriver = async (driverId: string) => {
+    try {
+      const response = await adminDriversApi.updateDriverApproval(driverId, true)
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Driver approved successfully"
+        })
+        fetchDrivers() // Refresh the data
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to approve driver',
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to approve driver",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleRejectDriver = async (driverId: string) => {
+    try {
+      const response = await adminDriversApi.updateDriverApproval(driverId, false, 'Rejected by admin')
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Driver rejected successfully"
+        })
+        fetchDrivers() // Refresh the data
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to reject driver',
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reject driver",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleToggleDriverStatus = async (driverId: string, currentStatus: boolean) => {
+    try {
+      const response = await adminDriversApi.updateDriverStatus(driverId, !currentStatus)
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: `Driver ${!currentStatus ? 'activated' : 'deactivated'} successfully`
+        })
+        fetchDrivers() // Refresh the data
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || 'Failed to update driver status',
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update driver status",
+        variant: "destructive"
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading drivers...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={fetchDrivers}>Try Again</Button>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Driver Management</h1>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Driver
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Add New Driver</DialogTitle>
-              <DialogDescription>Enter the details of the new driver to add them to the system.</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="Enter full name" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input id="mobile" placeholder="Enter mobile number" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="district">District</Label>
-                  <Select>
-                    <SelectTrigger id="district">
-                      <SelectValue placeholder="Select district" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="north">North</SelectItem>
-                      <SelectItem value="south">South</SelectItem>
-                      <SelectItem value="east">East</SelectItem>
-                      <SelectItem value="west">West</SelectItem>
-                      <SelectItem value="central">Central</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="vehicle-type">Vehicle Type</Label>
-                  <Select>
-                    <SelectTrigger id="vehicle-type">
-                      <SelectValue placeholder="Select vehicle type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sedan">Sedan</SelectItem>
-                      <SelectItem value="suv">SUV</SelectItem>
-                      <SelectItem value="minivan">Minivan</SelectItem>
-                      <SelectItem value="luxury">Luxury</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="location">Location</Label>
-                <Input id="location" placeholder="Enter address" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline">Cancel</Button>
-              <Button>Add Driver</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Filter Drivers</CardTitle>
-          <CardDescription>View and filter drivers by district, status, or search by name.</CardDescription>
+          <CardDescription>
+            View and filter drivers by status, verification, or search by name, email, or license.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="grid gap-2">
-              <label htmlFor="district-filter" className="text-sm font-medium">
-                District
-              </label>
-              <Select>
-                <SelectTrigger id="district-filter">
-                  <SelectValue placeholder="All districts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All districts</SelectItem>
-                  <SelectItem value="north">North</SelectItem>
-                  <SelectItem value="south">South</SelectItem>
-                  <SelectItem value="east">East</SelectItem>
-                  <SelectItem value="west">West</SelectItem>
-                  <SelectItem value="central">Central</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid gap-4 md:grid-cols-4">
             <div className="grid gap-2">
               <label htmlFor="status-filter" className="text-sm font-medium">
                 Status
               </label>
-              <Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger id="status-filter">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
@@ -241,7 +249,23 @@ export default function DriversPage() {
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="blocked">Blocked</SelectItem>
+                  <SelectItem value="online">Online</SelectItem>
+                  <SelectItem value="offline">Offline</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="verification-filter" className="text-sm font-medium">
+                Verification
+              </label>
+              <Select value={verificationFilter} onValueChange={setVerificationFilter}>
+                <SelectTrigger id="verification-filter">
+                  <SelectValue placeholder="All verification" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All verification</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -251,7 +275,14 @@ export default function DriversPage() {
               </label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="search-drivers" type="search" placeholder="Search drivers..." className="pl-8" />
+                <Input 
+                  id="search-drivers" 
+                  type="search" 
+                  placeholder="Search drivers..." 
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -260,10 +291,8 @@ export default function DriversPage() {
 
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">All Drivers</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="inactive">Inactive</TabsTrigger>
-          <TabsTrigger value="blocked">Blocked</TabsTrigger>
+          <TabsTrigger value="all">All Drivers ({filteredDrivers.length})</TabsTrigger>
+          <TabsTrigger value="pending">Pending Approval ({pendingDrivers.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="space-y-4">
           <Card>
@@ -271,35 +300,106 @@ export default function DriversPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>District</TableHead>
-                    <TableHead>Vehicle Type</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>License</TableHead>
                     <TableHead>Rating</TableHead>
+                    <TableHead>Trips</TableHead>
+                    <TableHead>Earnings</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {drivers.map((driver) => (
+                  {filteredDrivers.map((driver) => (
                     <TableRow key={driver.id}>
-                      <TableCell className="font-medium">{driver.id}</TableCell>
-                      <TableCell>{driver.name}</TableCell>
-                      <TableCell>{driver.district}</TableCell>
-                      <TableCell>{driver.vehicleType}</TableCell>
-                      <TableCell>{driver.mobile}</TableCell>
-                      <TableCell>{getStatusBadge(driver.status)}</TableCell>
-                      <TableCell>{driver.rating}</TableCell>
+                      <TableCell className="font-medium">{driver.user.fullName}</TableCell>
+                      <TableCell>{driver.user.email}</TableCell>
+                      <TableCell>{driver.user.phoneNumber}</TableCell>
+                      <TableCell>{driver.licenseNumber}</TableCell>
+                      <TableCell>{driver.rating ? driver.rating.toFixed(1) : 'N/A'}</TableCell>
+                      <TableCell>{driver.totalTrips}</TableCell>
+                      <TableCell>${driver.totalEarnings.toFixed(2)}</TableCell>
+                      <TableCell>{getStatusBadge(driver)}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              Actions
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditDriver(driver)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Phone className="mr-2 h-4 w-4" />
+                              Contact Driver
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Car className="mr-2 h-4 w-4" />
+                              View Vehicles
+                            </DropdownMenuItem>
+                            {driver.isVerified && (
+                              <DropdownMenuItem 
+                                onClick={() => handleToggleDriverStatus(driver.id, driver.isActive)}
+                              >
+                                {driver.isActive ? 'Deactivate' : 'Activate'} Driver
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="pending" className="space-y-4">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>License</TableHead>
+                    <TableHead>Applied Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingDrivers.map((driver) => (
+                    <TableRow key={driver.id}>
+                      <TableCell className="font-medium">{driver.user.fullName}</TableCell>
+                      <TableCell>{driver.user.email}</TableCell>
+                      <TableCell>{driver.user.phoneNumber}</TableCell>
+                      <TableCell>{driver.licenseNumber}</TableCell>
+                      <TableCell>{new Date(driver.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEditDriver(driver)}>
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700"
+                            onClick={() => handleApproveDriver(driver.id)}
+                          >
+                            <Check className="h-4 w-4" />
+                            Approve
                           </Button>
-                          <Button variant="outline" size="sm">
-                            <Trash className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700"
+                            onClick={() => handleRejectDriver(driver.id)}
+                          >
+                            <X className="h-4 w-4" />
+                            Reject
                           </Button>
                         </div>
                       </TableCell>
@@ -310,222 +410,56 @@ export default function DriversPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="active" className="space-y-4">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>District</TableHead>
-                    <TableHead>Vehicle Type</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {drivers
-                    .filter((driver) => driver.status === "active")
-                    .map((driver) => (
-                      <TableRow key={driver.id}>
-                        <TableCell className="font-medium">{driver.id}</TableCell>
-                        <TableCell>{driver.name}</TableCell>
-                        <TableCell>{driver.district}</TableCell>
-                        <TableCell>{driver.vehicleType}</TableCell>
-                        <TableCell>{driver.mobile}</TableCell>
-                        <TableCell>{getStatusBadge(driver.status)}</TableCell>
-                        <TableCell>{driver.rating}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => handleEditDriver(driver)}>
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="inactive" className="space-y-4">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>District</TableHead>
-                    <TableHead>Vehicle Type</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {drivers
-                    .filter((driver) => driver.status === "inactive")
-                    .map((driver) => (
-                      <TableRow key={driver.id}>
-                        <TableCell className="font-medium">{driver.id}</TableCell>
-                        <TableCell>{driver.name}</TableCell>
-                        <TableCell>{driver.district}</TableCell>
-                        <TableCell>{driver.vehicleType}</TableCell>
-                        <TableCell>{driver.mobile}</TableCell>
-                        <TableCell>{getStatusBadge(driver.status)}</TableCell>
-                        <TableCell>{driver.rating}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => handleEditDriver(driver)}>
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="blocked" className="space-y-4">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>District</TableHead>
-                    <TableHead>Vehicle Type</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {drivers
-                    .filter((driver) => driver.status === "blocked")
-                    .map((driver) => (
-                      <TableRow key={driver.id}>
-                        <TableCell className="font-medium">{driver.id}</TableCell>
-                        <TableCell>{driver.name}</TableCell>
-                        <TableCell>{driver.district}</TableCell>
-                        <TableCell>{driver.vehicleType}</TableCell>
-                        <TableCell>{driver.mobile}</TableCell>
-                        <TableCell>{getStatusBadge(driver.status)}</TableCell>
-                        <TableCell>{driver.rating}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => handleEditDriver(driver)}>
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Edit Driver</DialogTitle>
-            <DialogDescription>Update the driver&apos;s information.</DialogDescription>
+            <DialogTitle>Driver Details</DialogTitle>
+            <DialogDescription>View and manage driver information.</DialogDescription>
           </DialogHeader>
           {selectedDriver && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-name">Full Name</Label>
-                  <Input id="edit-name" defaultValue={selectedDriver.name} />
+                  <Label>Full Name</Label>
+                  <Input value={selectedDriver.user.fullName} readOnly />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-mobile">Mobile Number</Label>
-                  <Input id="edit-mobile" defaultValue={selectedDriver.mobile} />
+                  <Label>Email</Label>
+                  <Input value={selectedDriver.user.email} readOnly />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-district">District</Label>
-                  <Select defaultValue={selectedDriver.district.toLowerCase()}>
-                    <SelectTrigger id="edit-district">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="north">North</SelectItem>
-                      <SelectItem value="south">South</SelectItem>
-                      <SelectItem value="east">East</SelectItem>
-                      <SelectItem value="west">West</SelectItem>
-                      <SelectItem value="central">Central</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Phone Number</Label>
+                  <Input value={selectedDriver.user.phoneNumber} readOnly />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-vehicle-type">Vehicle Type</Label>
-                  <Select defaultValue={selectedDriver.vehicleType.toLowerCase()}>
-                    <SelectTrigger id="edit-vehicle-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sedan">Sedan</SelectItem>
-                      <SelectItem value="suv">SUV</SelectItem>
-                      <SelectItem value="minivan">Minivan</SelectItem>
-                      <SelectItem value="luxury">Luxury</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>License Number</Label>
+                  <Input value={selectedDriver.licenseNumber} readOnly />
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-location">Location</Label>
-                <Input id="edit-location" defaultValue={selectedDriver.location} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-status">Status</Label>
-                <Select defaultValue={selectedDriver.status}>
-                  <SelectTrigger id="edit-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="blocked">Blocked</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                  <Label>Total Trips</Label>
+                  <Input value={selectedDriver.totalTrips.toString()} readOnly />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Rating</Label>
+                  <Input value={selectedDriver.rating?.toFixed(1) || 'N/A'} readOnly />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Total Earnings</Label>
+                  <Input value={`$${selectedDriver.totalEarnings.toFixed(2)}`} readOnly />
+                </div>
               </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+              Close
             </Button>
-            <Button onClick={() => setIsEditDialogOpen(false)}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

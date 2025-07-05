@@ -5,9 +5,19 @@ import { cookies } from "next/headers";
 const secretKey = process.env.SESSION_SECRET || "fallback-secret-key-for-demo";
 const encodedKey = new TextEncoder().encode(secretKey);
 
-export async function createSession(userId: string) {
+export async function createSession(userId: string, adminData?: {
+  email?: string;
+  fullName?: string;
+  role?: string;
+  token?: string;
+}) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-  const session = await encrypt({ userId, expiresAt });
+  const sessionData = { 
+    userId, 
+    expiresAt,
+    ...(adminData && { adminData })
+  };
+  const session = await encrypt(sessionData);
 
   const cookieStore = await cookies();
   cookieStore.set("session", session, {
@@ -27,6 +37,12 @@ export async function deleteSession() {
 type SessionPayload = {
   userId: string;
   expiresAt: Date;
+  adminData?: {
+    email?: string;
+    fullName?: string;
+    role?: string;
+    token?: string;
+  };
 };
 
 export async function encrypt(payload: SessionPayload) {
@@ -49,14 +65,24 @@ export async function decrypt(session: string | undefined = "") {
   }
 }
 
-export async function verifySession() {
+export async function getSession() {
   const cookieStore = await cookies();
-  const cookie = cookieStore.get("session")?.value;
-  const session = await decrypt(cookie);
+  const session = cookieStore.get("session")?.value;
+  
+  if (!session) return null;
+  
+  const decrypted = await decrypt(session);
+  return decrypted as SessionPayload | null;
+}
 
-  if (!session?.userId) {
-    return null;
-  }
-
-  return { userId: session.userId };
+export async function verifySession() {
+  const session = await getSession();
+  
+  if (!session) return { isAuth: false };
+  
+  return {
+    isAuth: true,
+    userId: session.userId,
+    adminData: session.adminData
+  };
 }

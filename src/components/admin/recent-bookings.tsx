@@ -3,8 +3,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 
-export function RecentBookings() {
-  const bookings = [
+interface RecentBookingsProps {
+  bookings?: any[]
+}
+
+export function RecentBookings({ bookings: propBookings }: RecentBookingsProps) {
+  // Use provided bookings or fallback to mock data
+  const bookings = propBookings || [
     {
       id: "B-1234",
       customer: "John Smith",

@@ -1,10 +1,12 @@
 "use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Plus } from "lucide-react"
+import { Plus, Loader2, Send, Users, User, Truck } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -18,74 +20,147 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { adminNotificationsApi } from "@/lib/admin-api"
+import { useToast } from "@/hooks/use-toast"
+
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: string
+  targetAudience: string
+  status: string
+  sentAt?: string
+  createdAt: string
+  recipientCount?: number
+  readCount?: number
+}
 
 export default function NotificationsPage() {
-  const notifications = [
-    {
-      id: "N-1001",
-      title: "Weekend Discount",
-      message: "Get 25% off on all rides this weekend!",
-      sentTo: "All Users",
-      sentDate: "2023-05-19",
-      status: "sent",
-      openRate: "68%",
-    },
-    {
-      id: "N-1002",
-      title: "New Feature Alert",
-      message: "You can now schedule rides in advance!",
-      sentTo: "All Users",
-      sentDate: "2023-05-15",
-      status: "sent",
-      openRate: "72%",
-    },
-    {
-      id: "N-1003",
-      title: "Driver App Update",
-      message: "Please update your driver app to the latest version for improved features.",
-      sentTo: "All Drivers",
-      sentDate: "2023-05-12",
-      status: "sent",
-      openRate: "85%",
-    },
-    {
-      id: "N-1004",
-      title: "Holiday Schedule",
-      message: "We will be operating with limited drivers during the upcoming holiday.",
-      sentTo: "All Users",
-      sentDate: "2023-05-10",
-      status: "sent",
-      openRate: "64%",
-    },
-    {
-      id: "N-1005",
-      title: "Summer Promotion",
-      message: "Use code SUMMER15 for 15% off your rides all summer!",
-      sentTo: "Draft",
-      sentDate: "-",
-      status: "draft",
-      openRate: "-",
-    },
-  ]
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [newNotification, setNewNotification] = useState({
+    title: "",
+    message: "",
+    targetAudience: "all_users",
+    type: "general"
+  })
+  const { toast } = useToast()
+
+  useEffect(() => {
+    fetchNotifications()
+  }, [])
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true)
+      const response = await adminNotificationsApi.getNotifications(1, 50)
+      if (response.success) {
+        setNotifications(response.data || [])
+      } else {
+        throw new Error(response.message || 'Failed to fetch notifications')
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load notifications",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const sendNotification = async () => {
+    if (!newNotification.title.trim() || !newNotification.message.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in both title and message",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      setSending(true)
+      const response = await adminNotificationsApi.sendBulkNotification({
+        title: newNotification.title,
+        message: newNotification.message,
+        type: newNotification.type,
+        targetAudience: newNotification.targetAudience
+      })
+
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Notification sent successfully"
+        })
+        setIsCreateDialogOpen(false)
+        setNewNotification({
+          title: "",
+          message: "",
+          targetAudience: "all_users",
+          type: "general"
+        })
+        fetchNotifications() // Refresh the list
+      } else {
+        throw new Error(response.message || 'Failed to send notification')
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send notification",
+        variant: "destructive"
+      })
+    } finally {
+      setSending(false)
+    }
+  }
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "sent":
         return <Badge className="bg-green-500">Sent</Badge>
+      case "pending":
+        return <Badge className="bg-yellow-500">Pending</Badge>
       case "draft":
         return <Badge variant="outline">Draft</Badge>
-      case "scheduled":
-        return <Badge variant="secondary">Scheduled</Badge>
+      case "failed":
+        return <Badge variant="destructive">Failed</Badge>
       default:
-        return <Badge>{status}</Badge>
+        return <Badge variant="outline">{status || 'Unknown'}</Badge>
     }
+  }
+
+  const getAudienceIcon = (audience: string) => {
+    switch (audience?.toLowerCase()) {
+      case "all_users":
+        return <Users className="h-4 w-4" />
+      case "customers":
+        return <User className="h-4 w-4" />
+      case "drivers":
+        return <Truck className="h-4 w-4" />
+      default:
+        return <Users className="h-4 w-4" />
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading notifications...</span>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Notification Management</h1>
-        <Dialog>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -99,239 +174,136 @@ export default function NotificationsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="title">Notification Title</Label>
-                <Input id="title" placeholder="Enter notification title" />
+                <Label htmlFor="notification-title">Title</Label>
+                <Input
+                  id="notification-title"
+                  placeholder="Notification title"
+                  value={newNotification.title}
+                  onChange={(e) => setNewNotification(prev => ({ ...prev, title: e.target.value }))}
+                />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea id="message" placeholder="Enter notification message" rows={4} />
+                <Label htmlFor="notification-message">Message</Label>
+                <Textarea
+                  id="notification-message"
+                  placeholder="Notification message"
+                  value={newNotification.message}
+                  onChange={(e) => setNewNotification(prev => ({ ...prev, message: e.target.value }))}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="recipient">Send To</Label>
-                  <Select>
-                    <SelectTrigger id="recipient">
-                      <SelectValue placeholder="Select recipients" />
+                  <Label htmlFor="target-audience">Target Audience</Label>
+                  <Select 
+                    value={newNotification.targetAudience} 
+                    onValueChange={(value) => setNewNotification(prev => ({ ...prev, targetAudience: value }))}
+                  >
+                    <SelectTrigger id="target-audience">
+                      <SelectValue placeholder="Select audience" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all-users">All Users</SelectItem>
-                      <SelectItem value="all-drivers">All Drivers</SelectItem>
-                      <SelectItem value="active-users">Active Users</SelectItem>
-                      <SelectItem value="active-drivers">Active Drivers</SelectItem>
+                      <SelectItem value="all_users">All Users</SelectItem>
+                      <SelectItem value="customers">Customers Only</SelectItem>
+                      <SelectItem value="drivers">Drivers Only</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="send-option">Send Option</Label>
-                  <Select>
-                    <SelectTrigger id="send-option">
-                      <SelectValue placeholder="Select option" />
+                  <Label htmlFor="notification-type">Type</Label>
+                  <Select 
+                    value={newNotification.type} 
+                    onValueChange={(value) => setNewNotification(prev => ({ ...prev, type: value }))}
+                  >
+                    <SelectTrigger id="notification-type">
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="send-now">Send Now</SelectItem>
-                      <SelectItem value="schedule">Schedule</SelectItem>
-                      <SelectItem value="save-draft">Save as Draft</SelectItem>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="promotion">Promotion</SelectItem>
+                      <SelectItem value="update">App Update</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                      <SelectItem value="emergency">Emergency</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="schedule-date">Schedule Date (if applicable)</Label>
-                <Input id="schedule-date" type="datetime-local" />
-              </div>
             </div>
             <DialogFooter>
-              <Button variant="outline">Cancel</Button>
-              <Button>Create Notification</Button>
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={sending}>
+                Cancel
+              </Button>
+              <Button onClick={sendNotification} disabled={sending}>
+                {sending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Notification
+                  </>
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">All Notifications</TabsTrigger>
-          <TabsTrigger value="sent">Sent</TabsTrigger>
-          <TabsTrigger value="draft">Drafts</TabsTrigger>
-          <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-        </TabsList>
-        <TabsContent value="all" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification History</CardTitle>
-              <CardDescription>View all notifications sent to users and drivers.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Sent To</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Open Rate</TableHead>
-                    <TableHead>Actions</TableHead>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Notifications</CardTitle>
+          <CardDescription>View and manage all sent notifications.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Audience</TableHead>
+                <TableHead>Recipients</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Sent Date</TableHead>
+                <TableHead>Read Rate</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <TableRow key={notification.id}>
+                    <TableCell className="font-medium">{notification.title}</TableCell>
+                    <TableCell className="capitalize">{notification.type}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getAudienceIcon(notification.targetAudience)}
+                        <span className="capitalize">{notification.targetAudience?.replace('_', ' ')}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{notification.recipientCount || 'N/A'}</TableCell>
+                    <TableCell>{getStatusBadge(notification.status)}</TableCell>
+                    <TableCell>
+                      {notification.sentAt ? new Date(notification.sentAt).toLocaleDateString() : 'Not sent'}
+                    </TableCell>
+                    <TableCell>
+                      {notification.readCount && notification.recipientCount 
+                        ? `${Math.round((notification.readCount / notification.recipientCount) * 100)}%`
+                        : 'N/A'
+                      }
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {notifications.map((notification) => (
-                    <TableRow key={notification.id}>
-                      <TableCell className="font-medium">{notification.id}</TableCell>
-                      <TableCell>{notification.title}</TableCell>
-                      <TableCell>{notification.sentTo}</TableCell>
-                      <TableCell>{notification.sentDate}</TableCell>
-                      <TableCell>{getStatusBadge(notification.status)}</TableCell>
-                      <TableCell>{notification.openRate}</TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="sent" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sent Notifications</CardTitle>
-              <CardDescription>View all notifications that have been sent.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Sent To</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Open Rate</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {notifications
-                    .filter((notification) => notification.status === "sent")
-                    .map((notification) => (
-                      <TableRow key={notification.id}>
-                        <TableCell className="font-medium">{notification.id}</TableCell>
-                        <TableCell>{notification.title}</TableCell>
-                        <TableCell>{notification.sentTo}</TableCell>
-                        <TableCell>{notification.sentDate}</TableCell>
-                        <TableCell>{getStatusBadge(notification.status)}</TableCell>
-                        <TableCell>{notification.openRate}</TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">
-                            View Details
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="draft" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Draft Notifications</CardTitle>
-              <CardDescription>View all notifications saved as drafts.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Sent To</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Open Rate</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {notifications
-                    .filter((notification) => notification.status === "draft")
-                    .map((notification) => (
-                      <TableRow key={notification.id}>
-                        <TableCell className="font-medium">{notification.id}</TableCell>
-                        <TableCell>{notification.title}</TableCell>
-                        <TableCell>{notification.sentTo}</TableCell>
-                        <TableCell>{notification.sentDate}</TableCell>
-                        <TableCell>{getStatusBadge(notification.status)}</TableCell>
-                        <TableCell>{notification.openRate}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              Send
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="scheduled" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Scheduled Notifications</CardTitle>
-              <CardDescription>View all notifications scheduled to be sent.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Sent To</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Open Rate</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {notifications
-                    .filter((notification) => notification.status === "scheduled")
-                    .map((notification) => (
-                      <TableRow key={notification.id}>
-                        <TableCell className="font-medium">{notification.id}</TableCell>
-                        <TableCell>{notification.title}</TableCell>
-                        <TableCell>{notification.sentTo}</TableCell>
-                        <TableCell>{notification.sentDate}</TableCell>
-                        <TableCell>{getStatusBadge(notification.status)}</TableCell>
-                        <TableCell>{notification.openRate}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              Cancel
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No notifications found. Create your first notification to get started.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -2,12 +2,31 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { HelpCircle, Menu, X, LogIn } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { HelpCircle, Menu, X, LogIn, LogOut, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, isLoading, logout } = useAuth();
+  const router = useRouter();
+
+  // Debug logging
+  console.log('[Navbar] Render state:', { isAuthenticated, isLoading });
+
+  const handleLogout = async () => {
+    try {
+      console.log('[Navbar] Logout button clicked');
+      await logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect even if logout fails
+      router.push('/');
+    }
+  };
 
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100">
@@ -37,14 +56,38 @@ const Navbar = () => {
               </Button>
             </Link>
             
-            <Link href="/auth">
-              <Button 
-                className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-6 py-2 rounded-xl font-medium shadow-lg transform hover:scale-105 transition-all duration-200"
-              >
-                <LogIn className="mr-2 h-4 w-4" />
-                <span>Login</span>
-              </Button>
-            </Link>
+            {isLoading ? (
+              <div className="w-20 h-10 bg-gray-100 rounded-xl animate-pulse"></div>
+            ) : isAuthenticated ? (
+              <>
+                <Link href="/profile">
+                  <Button 
+                    variant="outline"
+                    className="inline-flex items-center px-4 py-2 border-2 border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl font-medium"
+                  >
+                    <User className="mr-2 h-4 w-4 text-blue-600" />
+                    <span>Profile</span>
+                  </Button>
+                </Link>
+                <Button 
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="inline-flex items-center px-4 py-2 border-2 border-red-200 text-red-700 bg-red-50 hover:bg-red-100 rounded-xl font-medium"
+                >
+                  <LogOut className="mr-2 h-4 w-4 text-red-600" />
+                  <span>Logout</span>
+                </Button>
+              </>
+            ) : (
+              <Link href="/auth">
+                <Button 
+                  className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-6 py-2 rounded-xl font-medium shadow-lg transform hover:scale-105 transition-all duration-200"
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  <span>Login</span>
+                </Button>
+              </Link>
+            )}
           </div>
           
           <div className="-mr-2 flex items-center md:hidden">
@@ -79,14 +122,38 @@ const Navbar = () => {
             </Button>
           </Link>
           
-          <Link href="/auth" className="block transform transition-all duration-200 hover:scale-105">
-            <Button 
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl font-medium transition-all duration-200"
-            >
-              <LogIn className="mr-2 h-4 w-4" />
-              <span>Login</span>
-            </Button>
-          </Link>
+          {isLoading ? (
+            <div className="w-full h-10 bg-gray-100 rounded-xl animate-pulse"></div>
+          ) : isAuthenticated ? (
+            <>
+              <Link href="/profile" className="block transform transition-all duration-200 hover:scale-105">
+                <Button 
+                  variant="outline"
+                  className="w-full justify-center border-2 border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl font-medium transition-all duration-200"
+                >
+                  <User className="mr-2 h-4 w-4 text-blue-600" />
+                  <span>Profile</span>
+                </Button>
+              </Link>
+              <Button 
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full justify-center border-2 border-red-200 text-red-700 bg-red-50 hover:bg-red-100 rounded-xl font-medium transition-all duration-200"
+              >
+                <LogOut className="mr-2 h-4 w-4 text-red-600" />
+                <span>Logout</span>
+              </Button>
+            </>
+          ) : (
+            <Link href="/auth" className="block transform transition-all duration-200 hover:scale-105">
+              <Button 
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl font-medium transition-all duration-200"
+              >
+                <LogIn className="mr-2 h-4 w-4" />
+                <span>Login</span>
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </nav>
