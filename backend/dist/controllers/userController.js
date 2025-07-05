@@ -234,6 +234,78 @@ class UserController {
             res.status(500).json((0, helpers_1.createErrorResponse)('Internal server error'));
         }
     }
+    async createCustomerProfile(req, res) {
+        try {
+            if (!req.user) {
+                return res.status(401).json((0, helpers_1.createErrorResponse)('Authentication required'));
+            }
+            const user = await database_1.default.user.findUnique({
+                where: { id: req.user.userId },
+                select: { role: true }
+            });
+            if (!user || user.role !== 'CUSTOMER') {
+                return res.status(403).json((0, helpers_1.createErrorResponse)('Only customers can create customer profiles'));
+            }
+            const { preferredPaymentMethod, defaultAddress, loyaltyPoints } = req.body;
+            const existingProfile = await database_1.default.customerProfile.findUnique({
+                where: { userId: req.user.userId }
+            });
+            let customerProfile;
+            if (existingProfile) {
+                customerProfile = await database_1.default.customerProfile.update({
+                    where: { userId: req.user.userId },
+                    data: {
+                        preferredPaymentMethod,
+                        defaultAddress,
+                        loyaltyPoints: loyaltyPoints || existingProfile.loyaltyPoints
+                    }
+                });
+            }
+            else {
+                customerProfile = await database_1.default.customerProfile.create({
+                    data: {
+                        userId: req.user.userId,
+                        preferredPaymentMethod,
+                        defaultAddress,
+                        loyaltyPoints: loyaltyPoints || 0
+                    }
+                });
+            }
+            logger_1.default.info(`Customer profile ${existingProfile ? 'updated' : 'created'} for user: ${req.user.userId}`);
+            res.status(existingProfile ? 200 : 201).json((0, helpers_1.createSuccessResponse)(`Customer profile ${existingProfile ? 'updated' : 'created'} successfully`, customerProfile));
+        }
+        catch (error) {
+            logger_1.default.error('Create/update customer profile error:', error);
+            res.status(500).json((0, helpers_1.createErrorResponse)('Internal server error'));
+        }
+    }
+    async getCustomerProfile(req, res) {
+        try {
+            if (!req.user) {
+                return res.status(401).json((0, helpers_1.createErrorResponse)('Authentication required'));
+            }
+            const customerProfile = await database_1.default.customerProfile.findUnique({
+                where: { userId: req.user.userId },
+                include: {
+                    user: {
+                        select: {
+                            fullName: true,
+                            email: true,
+                            phoneNumber: true
+                        }
+                    }
+                }
+            });
+            if (!customerProfile) {
+                return res.status(404).json((0, helpers_1.createErrorResponse)('Customer profile not found'));
+            }
+            res.status(200).json((0, helpers_1.createSuccessResponse)('Customer profile retrieved successfully', customerProfile));
+        }
+        catch (error) {
+            logger_1.default.error('Get customer profile error:', error);
+            res.status(500).json((0, helpers_1.createErrorResponse)('Internal server error'));
+        }
+    }
 }
 exports.userController = new UserController();
 //# sourceMappingURL=userController.js.map

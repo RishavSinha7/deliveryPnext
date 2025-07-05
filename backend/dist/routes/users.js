@@ -12,6 +12,8 @@ const router = express_1.default.Router();
 router.use(auth_1.authenticate);
 router.get('/profile', userController_1.userController.getProfile);
 router.put('/profile', (0, validation_1.validateBody)(validation_2.updateUserSchema), userController_1.userController.updateProfile);
+router.post('/customer-profile', userController_1.userController.createCustomerProfile);
+router.get('/customer-profile', userController_1.userController.getCustomerProfile);
 router.get('/', (0, auth_1.authorize)('ADMIN', 'SUPER_ADMIN'), userController_1.userController.getAllUsers);
 router.get('/:id', (0, auth_1.authorize)('ADMIN', 'SUPER_ADMIN'), userController_1.userController.getUserById);
 router.put('/:id/status', (0, auth_1.authorize)('ADMIN', 'SUPER_ADMIN'), userController_1.userController.updateUserStatus);

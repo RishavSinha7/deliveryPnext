@@ -7,6 +7,8 @@ declare class UserController {
     getUserById(req: AuthRequest, res: Response): Promise<Response | void>;
     updateUserStatus(req: AuthRequest, res: Response): Promise<Response | void>;
     deleteUser(req: AuthRequest, res: Response): Promise<Response | void>;
+    createCustomerProfile(req: AuthRequest, res: Response): Promise<Response | void>;
+    getCustomerProfile(req: AuthRequest, res: Response): Promise<Response | void>;
 }
 export declare const userController: UserController;
 export {};
