@@ -46,3 +46,19 @@ frontend/logs/
 # cache directories
 .cache/
 **/node_modules/.cache/
+
+# temporary utility scripts
+**/test-*.js
+**/check-*.js
+**/fix-*.js
+**/reset-*.js
+**/temp-*.js
+
+# compiled prisma files
+**/prisma/*.js
+**/prisma/*.d.ts
+**/prisma/*.js.map
+**/prisma/*.d.ts.map
+
+# backend dist files (generated)
+backend/dist/
