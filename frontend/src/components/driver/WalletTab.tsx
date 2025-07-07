@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,12 +35,23 @@ const walletRechargeSchema = z.object({
 // Define the type for form data
 type WalletRechargeFormData = z.infer<typeof walletRechargeSchema>;
 
-interface WalletTabProps {
-  walletBalance: number;
-  setWalletBalance: React.Dispatch<React.SetStateAction<number>>;
+export interface Earnings {
+  totalEarnings: number;
+  todayEarnings: number;
+  weeklyEarnings: number;
+  monthlyEarnings: number;
+  pendingAmount: number;
+  completedTrips: number;
+  totalTrips: number;
+  averageRating: number;
 }
 
-export const WalletTab = ({ walletBalance, setWalletBalance }: WalletTabProps) => {
+interface WalletTabProps {
+  earnings: Earnings | null;
+  isLoading: boolean;
+}
+
+export const WalletTab = ({ earnings, isLoading }: WalletTabProps) => {
   const { toast } = useToast();
 
   // Wallet recharge form
@@ -59,13 +70,10 @@ export const WalletTab = ({ walletBalance, setWalletBalance }: WalletTabProps) =
   const onWalletRechargeSubmit = (data: WalletRechargeFormData) => {
     console.log("Wallet Recharge Data:", data);
     
-    // Simulate API call and update balance
-    const amount = Number(data.amount);
-    setWalletBalance(prev => prev + amount);
-    
+    // TODO: Implement actual wallet recharge API call
     toast({
-      title: "Wallet Recharged! 💰",
-      description: `₹${amount} added to your wallet successfully`,
+      title: "Wallet Recharge Requested! 💰",
+      description: `₹${data.amount} recharge request submitted successfully`,
     });
     
     walletRechargeForm.reset();
@@ -90,6 +98,21 @@ export const WalletTab = ({ walletBalance, setWalletBalance }: WalletTabProps) =
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <Card className="border-0 bg-gradient-to-br from-blue-50 to-indigo-100 border-l-4 border-l-blue-500">
+          <CardContent className="p-4 sm:p-6">
+            <div className="animate-pulse">
+              <div className="h-6 bg-blue-200 rounded w-1/4 mb-2"></div>
+              <div className="h-8 bg-blue-200 rounded w-1/2"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Balance Card */}
@@ -102,7 +125,7 @@ export const WalletTab = ({ walletBalance, setWalletBalance }: WalletTabProps) =
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-medium text-gray-600 mb-1">Current Balance</h3>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600">₹{walletBalance.toLocaleString()}</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600">₹{earnings?.totalEarnings?.toLocaleString() || '0'}</p>
                 <Badge variant="secondary" className="mt-2 bg-green-100 text-green-700 border-green-200">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   Available
@@ -126,6 +149,34 @@ export const WalletTab = ({ walletBalance, setWalletBalance }: WalletTabProps) =
           </div>
         </CardContent>
       </Card>
+
+      {/* Earnings Summary Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">₹{earnings?.todayEarnings?.toLocaleString() || '0'}</div>
+            <div className="text-sm text-gray-600">Today</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">₹{earnings?.weeklyEarnings?.toLocaleString() || '0'}</div>
+            <div className="text-sm text-gray-600">This Week</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">₹{earnings?.monthlyEarnings?.toLocaleString() || '0'}</div>
+            <div className="text-sm text-gray-600">This Month</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-orange-600">₹{earnings?.pendingAmount?.toLocaleString() || '0'}</div>
+            <div className="text-sm text-gray-600">Pending</div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Recharge Card */}
       <Card>
@@ -199,7 +250,7 @@ export const WalletTab = ({ walletBalance, setWalletBalance }: WalletTabProps) =
                           <SelectValue placeholder="Select payment method" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                         <SelectItem value="upi" className="py-3">
                           <div className="flex items-center space-x-3">
                             <Smartphone className="h-4 w-4 text-blue-600" />
@@ -314,5 +365,3 @@ export const WalletTab = ({ walletBalance, setWalletBalance }: WalletTabProps) =
     </div>
   );
 };
-
-export default WalletTab;

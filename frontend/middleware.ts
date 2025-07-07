@@ -1,33 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decrypt } from "./src/lib/session";
 
-
-const protectedRoutes = ["/admin/dashboard"];
+// Define protected and public admin routes
+const protectedRoutes = [
+  "/admin/dashboard",
+  "/admin/users", 
+  "/admin/drivers",
+  "/admin/bookings",
+  "/admin/vehicles",
+  "/admin/reports",
+  "/admin/transactions",
+  "/admin/settings",
+  "/admin/notifications",
+  "/admin/coupons"
+];
 const publicRoutes = ["/admin/login"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const isProtectedRoute = protectedRoutes.includes(pathname);
-  const isPublicRoute = publicRoutes.includes(pathname);
+  
+  // Only process admin routes
+  if (!pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
 
-  const cookie = req.cookies.get("session")?.value;
+  console.log('[Middleware] Processing admin route:', pathname);
+  
+  // Get admin token from cookies
+  const adminToken = req.cookies.get("adminToken")?.value;
+  console.log('[Middleware] Admin token check:', {
+    pathname,
+    hasToken: !!adminToken,
+    tokenValue: adminToken ? 'present' : 'missing'
+  });
 
-  // Handle invalid or missing session cookie gracefully
-  const session = cookie ? await decrypt(cookie) : null;
-
-  // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !session?.userId) {
+  // Handle /admin root redirect - always redirect to login
+  if (pathname === "/admin" || pathname === "/admin/") {
+    console.log('[Middleware] Redirecting /admin to /admin/login');
     return NextResponse.redirect(new URL("/admin/login", req.url));
   }
 
-  // Redirect authenticated users away from public routes
-  // if (isPublicRoute && session?.userId) {
-  //   return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-  // }
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
+  console.log('[Middleware] Route classification:', {
+    pathname,
+    isProtectedRoute,
+    isPublicRoute,
+    hasToken: !!adminToken
+  });
+
+  // Redirect unauthenticated users from protected routes
+  if (isProtectedRoute && !adminToken) {
+    console.log('[Middleware] Redirecting to login - no admin token');
+    const loginUrl = new URL("/admin/login", req.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Redirect authenticated users away from login page  
+  if (isPublicRoute && adminToken) {
+    console.log('[Middleware] Redirecting to dashboard - user already authenticated');
+    const dashboardUrl = new URL("/admin/dashboard", req.url);
+    return NextResponse.redirect(dashboardUrl);
+  }
+
+  console.log('[Middleware] Allowing request to proceed');
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*"]
+  matcher: [
+    /*
+     * Match all admin routes
+     */
+    '/admin/:path*',
+  ],
 };

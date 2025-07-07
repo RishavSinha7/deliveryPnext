@@ -47,10 +47,14 @@ async function apiCall<T>(
 ): Promise<ApiResponse<T>> {
   const token = localStorage.getItem('authToken');
   
+  // Check if the body is FormData
+  const isFormData = options.body instanceof FormData;
+  
   const config: RequestInit = {
     mode: 'cors',
     headers: {
-      'Content-Type': 'application/json',
+      // Don't set Content-Type for FormData (browser will set it with boundary)
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
@@ -71,17 +75,37 @@ async function apiCall<T>(
     if (!contentType || !contentType.includes('application/json')) {
       const textResponse = await response.text();
       console.error('Non-JSON response received:', textResponse);
-      throw new Error('Server returned an invalid response. Please check if the backend is running.');
+      throw new Error(`Server returned an invalid response: ${textResponse || 'Please check if the backend is running.'}`);
     }
     
     if (!response.ok) {
       let errorMessage = 'An error occurred';
+      let errorDetails = null;
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
+        errorDetails = errorData.error || errorData.data || null;
+        console.error('API error response:', errorData);
+        console.error('Response status:', response.status);
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
       } catch (e) {
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        console.error('Failed to parse error response:', e);
       }
+      
+      // If it's a validation error, try to parse and show more specific details
+      if (errorDetails && typeof errorDetails === 'string') {
+        try {
+          const validationErrors = JSON.parse(errorDetails);
+          if (Array.isArray(validationErrors)) {
+            const validationMessages = validationErrors.map(err => `${err.field}: ${err.message}`).join(', ');
+            errorMessage = `Validation failed: ${validationMessages}`;
+          }
+        } catch (e) {
+          // If parsing fails, use the original error message
+        }
+      }
+      
       throw new Error(errorMessage);
     }
     
@@ -159,6 +183,109 @@ export const userApi = {
   },
 };
 
+// Driver API calls
+export const driverApi = {
+  // Get driver profile
+  getProfile: async (): Promise<ApiResponse<any>> => {
+    return apiCall('/drivers/profile');
+  },
+
+  // Update driver profile
+  updateProfile: async (profileData: any): Promise<ApiResponse<any>> => {
+    return apiCall('/drivers/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  },
+
+  // Update online status
+  updateOnlineStatus: async (isOnline: boolean): Promise<ApiResponse<any>> => {
+    return apiCall('/drivers/status', {
+      method: 'PUT',
+      body: JSON.stringify({ isOnline }),
+    });
+  },
+
+  // Get driver earnings
+  getEarnings: async (): Promise<ApiResponse<any>> => {
+    return apiCall('/drivers/earnings');
+  },
+
+  // Get driver trips
+  getTrips: async (): Promise<ApiResponse<any>> => {
+    return apiCall('/drivers/trips');
+  },
+
+  // Get available bookings for driver
+  getAvailableBookings: async (): Promise<ApiResponse<any>> => {
+    return apiCall('/bookings/driver/available');
+  },
+
+  // Accept booking
+  acceptBooking: async (bookingId: string): Promise<ApiResponse<any>> => {
+    return apiCall(`/bookings/${bookingId}/accept`, {
+      method: 'PUT',
+    });
+  },
+
+  // Start trip
+  startTrip: async (bookingId: string): Promise<ApiResponse<any>> => {
+    return apiCall(`/bookings/${bookingId}/start`, {
+      method: 'PUT',
+    });
+  },
+
+  // Complete trip
+  completeTrip: async (bookingId: string, tripData: any): Promise<ApiResponse<any>> => {
+    return apiCall(`/bookings/${bookingId}/complete`, {
+      method: 'PUT',
+      body: JSON.stringify(tripData),
+    });
+  },
+
+  // Update location
+  updateLocation: async (bookingId: string, location: { latitude: number; longitude: number }): Promise<ApiResponse<any>> => {
+    return apiCall(`/bookings/${bookingId}/update-location`, {
+      method: 'PUT',
+      body: JSON.stringify(location),
+    });
+  },
+};
+
+// Vehicle API calls
+export const vehicleApi = {
+  // Get driver's vehicles
+  getVehicles: async (): Promise<ApiResponse<any>> => {
+    return apiCall('/vehicles/my-vehicles');
+  },
+
+  // Create vehicle
+  createVehicle: async (vehicleData: FormData | any): Promise<ApiResponse<any>> => {
+    const isFormData = vehicleData instanceof FormData;
+    
+    return apiCall('/vehicles', {
+      method: 'POST',
+      body: isFormData ? vehicleData : JSON.stringify(vehicleData),
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+    });
+  },
+
+  // Update vehicle
+  updateVehicle: async (vehicleId: string, vehicleData: any): Promise<ApiResponse<any>> => {
+    return apiCall(`/vehicles/${vehicleId}`, {
+      method: 'PUT',
+      body: JSON.stringify(vehicleData),
+    });
+  },
+
+  // Delete vehicle
+  deleteVehicle: async (vehicleId: string): Promise<ApiResponse<any>> => {
+    return apiCall(`/vehicles/${vehicleId}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 // Token management with custom event dispatching
 export const tokenManager = {
   setToken: (token: string) => {
@@ -183,5 +310,24 @@ export const tokenManager = {
   
   isAuthenticated: () => {
     return !!localStorage.getItem('authToken');
+  },
+
+  getUserData: () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return null;
+    
+    try {
+      // Decode JWT token to get user data
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
   },
 };
