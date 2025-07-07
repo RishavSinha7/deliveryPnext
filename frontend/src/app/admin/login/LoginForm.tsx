@@ -7,6 +7,7 @@ import Image from "next/image";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AdminAuth } from "@/lib/admin-auth";
 
 // Define the validation schema for login
 const loginSchema = z.object({
@@ -77,9 +78,9 @@ const Login: React.FC = () => {
       }
 
       // Store the JWT token for subsequent API calls
-      localStorage.setItem('adminToken', result.data.token);
+      AdminAuth.setToken(result.data.token);
       
-      console.log('Admin login successful, token stored');
+      console.log('Admin login successful, token stored in localStorage and cookies');
 
       // For admin login, we'll redirect to dashboard
       router.push('/admin/dashboard');

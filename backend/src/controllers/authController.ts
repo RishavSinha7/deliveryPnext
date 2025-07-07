@@ -52,6 +52,39 @@ class AuthController {
         }
       });
 
+      // If user is a driver, create driver profile
+      if (role === 'DRIVER') {
+        await prisma.driverProfile.create({
+          data: {
+            userId: user.id,
+            aadhaarNumber: `TEMP_${user.id}`, // Temporary unique value
+            licenseNumber: `TEMP_${user.id}`, // Temporary unique value
+            experienceYears: 0, // Will be updated later
+            isOnline: false,
+            isVerified: false,
+            rating: 0,
+            totalTrips: 0,
+            totalEarnings: 0,
+            walletBalance: 0,
+          }
+        });
+        
+        logger.info(`Driver profile created for user: ${user.email}`);
+      }
+
+      // If user is a customer, create customer profile
+      if (role === 'CUSTOMER') {
+        await prisma.customerProfile.create({
+          data: {
+            userId: user.id,
+            preferredPaymentMethod: 'CASH',
+            loyaltyPoints: 0,
+          }
+        });
+        
+        logger.info(`Customer profile created for user: ${user.email}`);
+      }
+
       // Generate JWT token
       const token = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },

@@ -227,7 +227,7 @@ export default function TransactionsPage() {
                 <SelectTrigger id="status">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
@@ -242,7 +242,7 @@ export default function TransactionsPage() {
                 <SelectTrigger id="payment-method">
                   <SelectValue placeholder="All methods" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                   <SelectItem value="all">All methods</SelectItem>
                   <SelectItem value="cash">Cash</SelectItem>
                   <SelectItem value="card">Card</SelectItem>

@@ -12,6 +12,9 @@ router.use(authorize('ADMIN', 'SUPER_ADMIN'));
 router.get('/dashboard', adminController.getDashboardStats);
 router.get('/analytics', adminController.getAnalytics);
 
+// Driver management
+router.get('/drivers', adminController.getAllDrivers);
+
 // Reports
 router.get('/reports/bookings', adminController.getBookingReport);
 router.get('/reports/earnings', adminController.getEarningsReport);

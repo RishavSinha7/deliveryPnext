@@ -10,39 +10,22 @@ interface LiveTripsProps {
 }
 
 export function LiveTrips({ trips: propTrips }: LiveTripsProps) {
-  // Use provided trips or fallback to mock data
-  const trips = propTrips || [
-    {
-      id: "T-5678",
-      customer: "Emily Johnson",
-      driver: "Michael Brown",
-      pickup: "123 Main St",
-      dropoff: "456 Oak Ave",
-      status: "in-progress",
-      startTime: "10:30 AM",
-      estimatedArrival: "10:55 AM",
-    },
-    {
-      id: "T-5679",
-      customer: "Daniel Wilson",
-      driver: "Sarah Davis",
-      pickup: "789 Pine Rd",
-      dropoff: "321 Elm St",
-      status: "in-progress",
-      startTime: "10:15 AM",
-      estimatedArrival: "10:45 AM",
-    },
-    {
-      id: "T-5680",
-      customer: "Jessica Martinez",
-      driver: "Robert Taylor",
-      pickup: "555 Cedar Ln",
-      dropoff: "777 Maple Dr",
-      status: "pending",
-      startTime: "10:45 AM",
-      estimatedArrival: "11:15 AM",
-    },
-  ]
+  // Use provided trips (no fallback to hardcoded data)
+  const trips = propTrips || []
+
+  // Calculate real-time stats from the actual trips data
+  const liveTripsCount = trips.length
+  const inProgressTrips = trips.filter(trip => trip.status === 'IN_PROGRESS' || trip.status === 'ACTIVE' || trip.status === 'ONGOING').length
+  const pendingTrips = trips.filter(trip => trip.status === 'PENDING').length
+  
+  // Get unique active drivers from trips
+  const activeDriversCount = new Set(trips.map(trip => trip.driverId || trip.driver?.id).filter(Boolean)).size
+  
+  // Calculate average trip time if we have trip duration data
+  const completedTripsWithDuration = trips.filter(trip => trip.duration && trip.status === 'COMPLETED')
+  const averageTripTime = completedTripsWithDuration.length > 0 
+    ? Math.round(completedTripsWithDuration.reduce((sum, trip) => sum + trip.duration, 0) / completedTripsWithDuration.length)
+    : 0
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -67,8 +50,10 @@ export function LiveTrips({ trips: propTrips }: LiveTripsProps) {
             <CardTitle className="text-sm font-medium">Live Trips</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">2 in progress, 1 pending</p>
+            <div className="text-2xl font-bold">{liveTripsCount}</div>
+            <p className="text-xs text-muted-foreground">
+              {inProgressTrips} in progress, {pendingTrips} pending
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -76,8 +61,8 @@ export function LiveTrips({ trips: propTrips }: LiveTripsProps) {
             <CardTitle className="text-sm font-medium">Active Drivers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">Out of 42 total drivers</p>
+            <div className="text-2xl font-bold">{activeDriversCount}</div>
+            <p className="text-xs text-muted-foreground">Currently on trips</p>
           </CardContent>
         </Card>
         <Card>
@@ -85,8 +70,15 @@ export function LiveTrips({ trips: propTrips }: LiveTripsProps) {
             <CardTitle className="text-sm font-medium">Average Trip Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24 min</div>
-            <p className="text-xs text-muted-foreground">-2 min from yesterday</p>
+            <div className="text-2xl font-bold">
+              {averageTripTime > 0 ? `${averageTripTime} min` : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {completedTripsWithDuration.length > 0 
+                ? `Based on ${completedTripsWithDuration.length} completed trips`
+                : 'No completed trips data'
+              }
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -106,37 +98,65 @@ export function LiveTrips({ trips: propTrips }: LiveTripsProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {trips.map((trip) => (
-              <TableRow key={trip.id}>
-                <TableCell className="font-medium">{trip.id}</TableCell>
-                <TableCell>{trip.customer}</TableCell>
-                <TableCell>{trip.driver}</TableCell>
-                <TableCell>{getStatusBadge(trip.status)}</TableCell>
-                <TableCell>{trip.startTime}</TableCell>
-                <TableCell>{trip.estimatedArrival}</TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Track
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Contact Driver</DropdownMenuItem>
-                      <DropdownMenuItem>Contact Customer</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {trips.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  No active trips found
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              trips.map((trip) => (
+                <TableRow key={trip.id}>
+                  <TableCell className="font-medium">
+                    {trip.bookingNumber || trip.id}
+                  </TableCell>
+                  <TableCell>
+                    {trip.customer?.fullName || trip.customerName || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {trip.driver?.user?.fullName || trip.driverName || 'N/A'}
+                  </TableCell>
+                  <TableCell>{getStatusBadge(trip.status)}</TableCell>
+                  <TableCell>
+                    {trip.startTime || trip.createdAt ? 
+                      new Date(trip.startTime || trip.createdAt).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'N/A'
+                    }
+                  </TableCell>
+                  <TableCell>
+                    {trip.estimatedArrival || trip.estimatedDeliveryTime ? 
+                      new Date(trip.estimatedArrival || trip.estimatedDeliveryTime).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'N/A'
+                    }
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Track
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Actions</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
+                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuItem>Contact Driver</DropdownMenuItem>
+                        <DropdownMenuItem>Contact Customer</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

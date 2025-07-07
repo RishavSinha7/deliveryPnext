@@ -125,13 +125,13 @@ export default function VehiclesPage() {
 
   const handleApproveVehicle = async (vehicleId: string) => {
     try {
-      const response = await adminVehiclesApi.updateVehicleApproval(vehicleId, true)
+      const response = await adminVehiclesApi.verifyVehicle(vehicleId)
       if (response.success) {
         toast({
           title: "Success",
           description: "Vehicle approved successfully"
         })
-        fetchVehicles() // Refresh the data
+        fetchVehicles()
       } else {
         toast({
           title: "Error",
@@ -139,7 +139,7 @@ export default function VehiclesPage() {
           variant: "destructive"
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to approve vehicle",
@@ -181,7 +181,7 @@ export default function VehiclesPage() {
           title: "Success",
           description: `Vehicle ${!currentStatus ? 'activated' : 'deactivated'} successfully`
         })
-        fetchVehicles() // Refresh the data
+        fetchVehicles()
       } else {
         toast({
           title: "Error",
@@ -189,7 +189,7 @@ export default function VehiclesPage() {
           variant: "destructive"
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update vehicle status",
@@ -246,7 +246,7 @@ export default function VehiclesPage() {
                     <SelectTrigger id="type">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                       <SelectItem value="sedan">Sedan</SelectItem>
                       <SelectItem value="suv">SUV</SelectItem>
                       <SelectItem value="minivan">Minivan</SelectItem>
@@ -271,7 +271,7 @@ export default function VehiclesPage() {
                   <SelectTrigger id="driver">
                     <SelectValue placeholder="Select driver" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                     <SelectItem value="david">David Johnson</SelectItem>
                     <SelectItem value="michael">Michael Brown</SelectItem>
                     <SelectItem value="sarah">Sarah Davis</SelectItem>
@@ -306,7 +306,7 @@ export default function VehiclesPage() {
                 <SelectTrigger id="type-filter">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                   <SelectItem value="all">All types</SelectItem>
                   <SelectItem value="car">Car</SelectItem>
                   <SelectItem value="bike">Bike</SelectItem>
@@ -323,7 +323,7 @@ export default function VehiclesPage() {
                 <SelectTrigger id="status-filter">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>

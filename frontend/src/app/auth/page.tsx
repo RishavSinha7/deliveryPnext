@@ -22,11 +22,12 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthRedirect } from "@/components/auth-redirect";
 
 // Define the validation schema for sign in
 const signInSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
   isDriver: z.boolean().default(false),
 });
 
@@ -34,8 +35,9 @@ const signInSchema = z.object({
 const signUpSchema = z.object({
   fullName: z.string().min(2, { message: "Full name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
-  phoneNumber: z.string().min(10, { message: "Please enter a valid phone number" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  phoneNumber: z.string()
+    .regex(/^(\+91|91)?[6-9]\d{9}$/, { message: "Please enter a valid Indian phone number (e.g., +91 9876543210)" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
   confirmPassword: z.string(),
   isDriver: z.boolean().default(false),
   terms: z.boolean().refine((val) => val === true, {
@@ -55,6 +57,7 @@ export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { login, register } = useAuth();
+  const { redirectAfterLogin } = useAuthRedirect();
 
   // Initialize forms
   const signInForm = useForm<SignInFormValues>({
@@ -91,14 +94,15 @@ export default function AuthPage() {
           description: `Welcome back, ${response.data.user.fullName}!`,
         });
         
-        // Redirect based on role or driver checkbox
-        if (data.isDriver || response.data.user.role === 'DRIVER') {
-          router.push("/driver");
-        } else if (response.data.user.role === 'ADMIN' || response.data.user.role === 'SUPER_ADMIN') {
-          router.push("/admin");
-        } else {
-          router.push("/");
-        }
+        // Debug logging
+        console.log('[Auth] Sign in successful:', {
+          isDriverCheckbox: data.isDriver,
+          userRole: response.data.user.role,
+          userData: response.data.user
+        });
+        
+        // Use the redirect hook
+        redirectAfterLogin(response.data.user.role, data.isDriver);
       }
     } catch (error: any) {
       toast({
@@ -129,12 +133,15 @@ export default function AuthPage() {
           description: `Account created successfully! Welcome, ${response.data.user.fullName}!`,
         });
         
-        // Redirect based on role
-        if (data.isDriver || response.data.user.role === 'DRIVER') {
-          router.push("/driver");
-        } else {
-          router.push("/");
-        }
+        // Debug logging
+        console.log('[Auth] Sign up successful:', {
+          isDriverCheckbox: data.isDriver,
+          userRole: response.data.user.role,
+          userData: response.data.user
+        });
+        
+        // Use the redirect hook
+        redirectAfterLogin(response.data.user.role, data.isDriver);
       }
     } catch (error: any) {
       toast({
@@ -315,7 +322,7 @@ export default function AuthPage() {
                         <div className="relative">
                           <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                           <Input 
-                            placeholder="+1234567890" 
+                            placeholder="+91 9876543210" 
                             className="pl-10 focus-visible:ring-blue-500" 
                             {...field} 
                           />

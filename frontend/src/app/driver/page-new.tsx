@@ -24,27 +24,36 @@ import { ProfileTab } from '@/components/driver/ProfileTab';
 import { useDriverData } from '@/hooks/use-driver-data';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { AuthRedirect } from '@/components/auth-redirect';
-import { AuthDebug } from '@/components/debug/AuthDebug';
 
 export default function DriverPanelPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const {
     driverProfile,
     trips,
+    availableBookings,
     earnings,
     vehicles,
     isLoading,
     error,
     updateOnlineStatus,
+    acceptBooking,
+    startTrip,
+    completeTrip,
     updateLocation,
     refreshData,
-    addVehicle,
   } = useDriverData();
 
   const [activeTab, setActiveTab] = useState("active-trips");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Check if user is authenticated and redirect if not
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/auth');
+    }
+  }, [isAuthenticated, router]);
 
   // Show error toast if there's an error
   useEffect(() => {
@@ -71,6 +80,38 @@ export default function DriverPanelPage() {
     setIsMobileMenuOpen(false);
   };
 
+  const handleStartTrip = async (bookingId: string) => {
+    try {
+      await startTrip(bookingId);
+      toast({
+        title: "Trip Started",
+        description: "You have successfully started the trip",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start trip",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCompleteTrip = async (bookingId: string, data: any) => {
+    try {
+      await completeTrip(bookingId, data);
+      toast({
+        title: "Trip Completed",
+        description: "Trip has been completed successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to complete trip",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleUpdateLocation = async (bookingId: string, latitude: number, longitude: number) => {
     try {
       await updateLocation(bookingId, { latitude, longitude });
@@ -78,6 +119,22 @@ export default function DriverPanelPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to update location",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAcceptBooking = async (bookingId: string) => {
+    try {
+      await acceptBooking(bookingId);
+      toast({
+        title: "Booking Accepted",
+        description: "You have successfully accepted the booking",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to accept booking",
         variant: "destructive",
       });
     }
@@ -113,37 +170,18 @@ export default function DriverPanelPage() {
     );
   }
 
-  // Show setup wizard for new drivers
+  // Show error state if driver profile is not found
   if (!driverProfile) {
     return (
-      <AuthRedirect requiredRole="DRIVER">
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Truck className="h-8 w-8 text-blue-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Driver Panel!</h1>
-            <p className="text-gray-600 mb-6">
-              Your driver profile is being set up. Please refresh the page or complete your profile setup.
-            </p>
-            <div className="space-y-3">
-              <Button 
-                onClick={() => window.location.reload()} 
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                Refresh Page
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => refreshData()}
-                className="w-full"
-              >
-                Reload Data
-              </Button>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Driver Profile Not Found</h1>
+          <p className="text-gray-600 mb-4">Please complete your driver profile setup</p>
+          <Button onClick={() => router.push('/auth')}>
+            Go to Authentication
+          </Button>
         </div>
-      </AuthRedirect>
+      </div>
     );
   }
 
@@ -151,22 +189,21 @@ export default function DriverPanelPage() {
   const completedTrips = trips.filter(trip => trip.status === 'COMPLETED');
 
   return (
-    <AuthRedirect requiredRole="DRIVER">
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              {/* Back Button */}
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Back to Home</span>
-                </Button>
-              </Link>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Back Button */}
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Back to Home</span>
+              </Button>
+            </Link>
 
-              {/* Title */}
-              <div className="flex-1 text-center">
+            {/* Title */}
+            <div className="flex-1 text-center">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Driver Panel</h1>
             </div>
 
@@ -202,9 +239,6 @@ export default function DriverPanelPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Debug component - remove in production */}
-        <AuthDebug />
-        
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Navigation */}
           <div className="hidden md:block">
@@ -229,7 +263,10 @@ export default function DriverPanelPage() {
             {/* Active Trips Tab */}
             <TabsContent value="active-trips" className="mt-0">
               <ActiveTripsTab
-                trips={trips}
+                trips={activeTrips}
+                availableBookings={availableBookings}
+                onAcceptBooking={handleAcceptBooking}
+                onStartTrip={handleStartTrip}
               />
             </TabsContent>
 
@@ -251,7 +288,6 @@ export default function DriverPanelPage() {
               <VehicleTab 
                 vehicles={vehicles}
                 onRefresh={refreshData}
-                onAddVehicle={addVehicle}
               />
             </TabsContent>
             
@@ -278,6 +314,5 @@ export default function DriverPanelPage() {
         </Tabs>
       </div>
     </div>
-    </AuthRedirect>
   );
 }
