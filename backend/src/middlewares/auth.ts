@@ -38,6 +38,10 @@ export const authenticate = async (
 
 export const authorize = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    console.log('🔐 Authorization check - User:', req.user);
+    console.log('🔐 Authorization check - Required roles:', roles);
+    console.log('🔐 Authorization check - User role:', req.user?.role);
+    
     if (!req.user) {
       const errorResponse = createErrorResponse(
         'Access denied',
@@ -48,6 +52,7 @@ export const authorize = (...roles: string[]) => {
     }
 
     if (!roles.includes(req.user.role)) {
+      console.log('🔐 Access denied - Role mismatch');
       const errorResponse = createErrorResponse(
         'Access denied',
         'Insufficient permissions'
@@ -56,6 +61,7 @@ export const authorize = (...roles: string[]) => {
       return;
     }
 
+    console.log('🔐 Authorization successful');
     next();
   };
 };

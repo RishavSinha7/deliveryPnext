@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 
 // Helper function to get auth headers
 function getAuthHeaders() {
-  const token = localStorage.getItem('adminToken');
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('authToken');
   
   return {
     'Content-Type': 'application/json',
@@ -48,10 +48,16 @@ async function apiCall(endpoint: string, options: RequestInit = {}) {
       throw new Error(data.message || `HTTP Error: ${response.status}`);
     }
     
+    // Return the response data directly since backend sends structured response
     return data;
   } catch (error) {
     console.error(`API call failed for ${endpoint}:`, error);
-    throw error;
+    // Return a structured error response
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'An unexpected error occurred',
+      data: null
+    };
   }
 }
 
@@ -138,7 +144,7 @@ export const adminBookingsApi = {
       ...(status && { status }),
       ...(search && { search })
     });
-    return apiCall(`/bookings?${params}`);
+    return apiCall(`/bookings/admin/all?${params}`);
   },
   
   // Get booking by ID
@@ -163,18 +169,18 @@ export const adminBookingsApi = {
   },
   
   // Update booking status
-  updateBookingStatus: async (id: string, status: string, reason?: string) => {
-    return apiCall(`/bookings/${id}/status`, {
+  updateBookingStatus: async (bookingId: string, status: string) => {
+    return apiCall(`/bookings/admin/status`, {
       method: 'PUT',
-      body: JSON.stringify({ status, reason })
+      body: JSON.stringify({ bookingId, status })
     });
   },
   
   // Assign driver to booking
   assignDriver: async (bookingId: string, driverId: string) => {
-    return apiCall(`/bookings/${bookingId}/assign-driver`, {
-      method: 'PUT',
-      body: JSON.stringify({ driverId })
+    return apiCall(`/bookings/admin/assign-driver`, {
+      method: 'POST',
+      body: JSON.stringify({ bookingId, driverId })
     });
   },
   
@@ -192,7 +198,16 @@ export const adminBookingsApi = {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     return apiCall(`/admin/reports/bookings?${params}`);
-  }
+  },
+  
+  // Start trip
+  startTrip: async (id: string) => apiCall(`/bookings/${id}/start`, { method: 'PUT' }),
+  
+  // Complete trip
+  completeTrip: async (id: string, data: any) => apiCall(`/bookings/${id}/complete`, { method: 'PUT', body: JSON.stringify(data) }),
+  
+  // Update location
+  updateLocation: async (id: string, latitude: number, longitude: number) => apiCall(`/bookings/${id}/update-location`, { method: 'PUT', body: JSON.stringify({ latitude, longitude }) }),
 };
 
 // Drivers Management API
@@ -278,16 +293,7 @@ export const adminDriversApi = {
 // Vehicles Management API
 export const adminVehiclesApi = {
   // Get all vehicles
-  getVehicles: async (page = 1, limit = 10, type?: string, status?: string, search?: string) => {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      ...(type && { type }),
-      ...(status && { status }),
-      ...(search && { search })
-    });
-    return apiCall(`/vehicles?${params}`);
-  },
+  getVehicles: async () => apiCall('/vehicles'),
   
   // Get vehicle by ID
   getVehicle: async (id: string) => {
@@ -295,28 +301,13 @@ export const adminVehiclesApi = {
   },
   
   // Create new vehicle
-  createVehicle: async (vehicleData: any) => {
-    return apiCall('/vehicles', {
-      method: 'POST',
-      body: JSON.stringify(vehicleData)
-    });
-  },
+  createVehicle: async (data: any) => apiCall('/vehicles', { method: 'POST', body: JSON.stringify(data) }),
   
   // Update vehicle
-  updateVehicle: async (id: string, vehicleData: any) => {
-    return apiCall(`/vehicles/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(vehicleData)
-    });
-  },
+  updateVehicle: async (id: string, data: any) => apiCall(`/vehicles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   
   // Update vehicle status
-  updateVehicleStatus: async (id: string, isActive: boolean) => {
-    return apiCall(`/vehicles/${id}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ isActive })
-    });
-  },
+  updateVehicleStatus: async (id: string, isActive: boolean) => apiCall(`/vehicles/${id}/status`, { method: 'PUT', body: JSON.stringify({ isActive }) }),
   
   // Approve/Reject vehicle
   updateVehicleApproval: async (id: string, isApproved: boolean, reason?: string) => {
@@ -327,11 +318,10 @@ export const adminVehiclesApi = {
   },
   
   // Delete vehicle
-  deleteVehicle: async (id: string) => {
-    return apiCall(`/vehicles/${id}`, {
-      method: 'DELETE'
-    });
-  }
+  deleteVehicle: async (id: string) => apiCall(`/vehicles/${id}`, { method: 'DELETE' }),
+  
+  // Verify vehicle
+  verifyVehicle: async (id: string) => apiCall(`/vehicles/${id}/verify`, { method: 'PUT' }),
 };
 
 // Coupons Management API
@@ -442,28 +432,13 @@ export const adminNotificationsApi = {
 // Reports and Analytics API
 export const adminReportsApi = {
   // Get booking report
-  getBookingReport: async (startDate?: string, endDate?: string) => {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    return apiCall(`/admin/reports/bookings?${params}`);
-  },
+  getBookingReport: async () => apiCall('/admin/reports/bookings'),
   
   // Get earnings report
-  getEarningsReport: async (startDate?: string, endDate?: string) => {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    return apiCall(`/admin/reports/earnings?${params}`);
-  },
+  getEarningsReport: async () => apiCall('/admin/reports/earnings'),
   
   // Get driver report
-  getDriverReport: async (startDate?: string, endDate?: string) => {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    return apiCall(`/admin/reports/drivers?${params}`);
-  },
+  getDriverReport: async () => apiCall('/admin/reports/drivers'),
   
   // Export report
   exportReport: async (reportType: string, format: 'csv' | 'pdf', filters: any) => {
@@ -471,7 +446,13 @@ export const adminReportsApi = {
       method: 'POST',
       body: JSON.stringify({ reportType, format, filters })
     });
-  }
+  },
+  
+  // Get analytics
+  getAnalytics: async () => apiCall('/admin/analytics'),
+  
+  // Create backup
+  createBackup: async () => apiCall('/admin/system/backup', { method: 'POST' }),
 };
 
 // Settings Management API

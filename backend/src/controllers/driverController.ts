@@ -49,8 +49,89 @@ class DriverController {
   // Update driver profile
   async updateProfile(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
-      res.status(200).json(
-        createSuccessResponse('Update driver profile functionality not yet implemented')
+      if (!req.user) {
+        return res.status(401).json(
+          createErrorResponse('Authentication required')
+        );
+      }
+
+      const {
+        aadhaarNumber,
+        licenseNumber,
+        experienceYears,
+        isOnline
+      } = req.body;
+
+      // Basic validation
+      if (!aadhaarNumber || !licenseNumber || experienceYears === undefined) {
+        return res.status(400).json(
+          createErrorResponse('Missing required fields: aadhaarNumber, licenseNumber, experienceYears')
+        );
+      }
+
+      // Check if driver profile already exists
+      const existingProfile = await prisma.driverProfile.findUnique({
+        where: { userId: req.user.userId }
+      });
+
+      let driverProfile;
+
+      if (existingProfile) {
+        // Update existing profile
+        driverProfile = await prisma.driverProfile.update({
+          where: { userId: req.user.userId },
+          data: {
+            aadhaarNumber,
+            licenseNumber,
+            experienceYears: parseInt(experienceYears),
+            isOnline: isOnline !== undefined ? isOnline : existingProfile.isOnline
+          },
+          include: {
+            user: {
+              select: {
+                fullName: true,
+                email: true,
+                phoneNumber: true,
+                profileImage: true
+              }
+            },
+            vehicles: true
+          }
+        });
+        
+        logger.info(`Driver profile updated for user: ${req.user.userId}`);
+      } else {
+        // Create new profile
+        driverProfile = await prisma.driverProfile.create({
+          data: {
+            userId: req.user.userId,
+            aadhaarNumber,
+            licenseNumber,
+            experienceYears: parseInt(experienceYears),
+            isOnline: isOnline !== undefined ? isOnline : false,
+            isVerified: false
+          },
+          include: {
+            user: {
+              select: {
+                fullName: true,
+                email: true,
+                phoneNumber: true,
+                profileImage: true
+              }
+            },
+            vehicles: true
+          }
+        });
+        
+        logger.info(`Driver profile created for user: ${req.user.userId}`);
+      }
+
+      res.status(existingProfile ? 200 : 201).json(
+        createSuccessResponse(
+          existingProfile ? 'Driver profile updated successfully' : 'Driver profile created successfully',
+          driverProfile
+        )
       );
     } catch (error) {
       logger.error('Update driver profile error:', error);

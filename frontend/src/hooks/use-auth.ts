@@ -6,13 +6,16 @@ import { tokenManager, authApi } from '@/lib/api';
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   // Check authentication status on mount and when localStorage changes
   useEffect(() => {
     const checkAuth = () => {
       const authenticated = tokenManager.isAuthenticated();
-      console.log('[useAuth] Auth state check:', { authenticated, hasToken: !!tokenManager.getToken() });
+      const userData = tokenManager.getUserData();
+      console.log('[useAuth] Auth state check:', { authenticated, hasToken: !!tokenManager.getToken(), userData });
       setIsAuthenticated(authenticated);
+      setUser(userData);
       setIsLoading(false);
     };
 
@@ -50,6 +53,7 @@ export const useAuth = () => {
         console.log('[useAuth] Login successful, setting token');
         tokenManager.setToken(response.data.token);
         setIsAuthenticated(true);
+        setUser(response.data.user);
         console.log('[useAuth] Auth state updated to:', true);
         return response;
       }
@@ -73,6 +77,7 @@ export const useAuth = () => {
       console.log('[useAuth] Clearing token and updating auth state');
       tokenManager.removeToken();
       setIsAuthenticated(false);
+      setUser(null);
       console.log('[useAuth] Auth state updated to:', false);
     }
   };
@@ -91,6 +96,7 @@ export const useAuth = () => {
         console.log('[useAuth] Registration successful, setting token');
         tokenManager.setToken(response.data.token);
         setIsAuthenticated(true);
+        setUser(response.data.user);
         console.log('[useAuth] Auth state updated to:', true);
         return response;
       }
@@ -104,6 +110,7 @@ export const useAuth = () => {
   return {
     isAuthenticated,
     isLoading,
+    user,
     login,
     logout,
     register,

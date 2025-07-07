@@ -29,7 +29,7 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
   const originRef = useRef<HTMLInputElement>(null!);
   const destRef = useRef<HTMLInputElement>(null!);
 
-  const handleGetEstimate = () => {
+  const handleGetEstimate = async () => {
     const pickupValue = originRef.current?.value || '';
     const dropValue = destRef.current?.value || '';
     
@@ -38,11 +38,69 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
       return;
     }
     
-    // Determine vehicle type based on show prop
-    const vehicleType = show === 'bike' ? 'bike' : 'truck';
+    // Get form values
+    const phoneNumber = document.querySelector<HTMLInputElement>('input[placeholder="Phone Number"]')?.value || '';
+    const customerName = document.querySelector<HTMLInputElement>('input[placeholder="Name"]')?.value || '';
+    const customerType = document.querySelector<HTMLSelectElement>('select')?.value || '';
     
-    // Redirect to ride status page with pickup, drop, and vehicle type parameters
-    router.push(`/ride-status?pickup=${encodeURIComponent(pickupValue)}&drop=${encodeURIComponent(dropValue)}&type=${vehicleType}`);
+    if (!phoneNumber || !customerName || !customerType) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    try {
+      // Check if user is authenticated
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('Please log in to create a booking');
+        router.push('/auth');
+        return;
+      }
+
+      // Create booking via API
+      const bookingData = {
+        serviceType: show === 'bike' ? 'BIKE_DELIVERY' : 'TRUCK_DELIVERY',
+        pickupAddress: pickupValue,
+        pickupLatitude: 0, // You might want to get actual coordinates
+        pickupLongitude: 0,
+        dropoffAddress: dropValue,
+        dropoffLatitude: 0,
+        dropoffLongitude: 0,
+        pickupDateTime: new Date().toISOString(),
+        estimatedFare: 100, // Calculate based on distance
+        notes: `Customer: ${customerName}, Phone: ${phoneNumber}, Type: ${customerType}`,
+        paymentMethod: 'CASH',
+        customerName,
+        customerPhone: phoneNumber,
+        customerType
+      };
+      
+      // Make API call to create booking
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/bookings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(bookingData)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        const bookingId = result.data.id;
+        
+        // Redirect to ride status page with booking ID
+        router.push(`/ride-status?bookingId=${bookingId}&pickup=${encodeURIComponent(pickupValue)}&drop=${encodeURIComponent(dropValue)}&type=${show === 'bike' ? 'bike' : 'truck'}`);
+      } else {
+        // Get error details from response
+        const errorData = await response.json();
+        console.error('Booking creation failed:', errorData);
+        alert(`Failed to create booking: ${errorData.message || 'Please try again.'}`);
+      }
+    } catch (error) {
+      console.error('Booking creation error:', error);
+      alert('An error occurred while creating your booking. Please check your internet connection and try again.');
+    }
   };
 
   if (!isLoaded) return <Skeleton className="h-6 w-32" />;

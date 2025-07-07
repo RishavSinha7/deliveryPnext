@@ -90,24 +90,38 @@ export default function DashboardPage() {
         }
 
         // If dashboard API fails, fetch from individual endpoints
-        let usersData, bookingsData, vehiclesData;
+        let usersData, bookingsData, vehiclesData, activeTripsData;
         if (!dashboardData.success) {
           try {
-            [usersData, bookingsData, vehiclesData] = await Promise.all([
+            [usersData, bookingsData, vehiclesData, activeTripsData] = await Promise.all([
               adminUsersApi.getUsers(1, 1), // Just get count
               adminBookingsApi.getBookings(1, 10), // Get recent bookings
-              adminVehiclesApi.getVehicles(1, 1) // Just get count
+              adminVehiclesApi.getVehicles(), // Get vehicles
+              Promise.all([
+                adminBookingsApi.getBookings(1, 50, 'IN_PROGRESS'), // Get in-progress trips
+                adminBookingsApi.getBookings(1, 50, 'ACTIVE'), // Get active trips
+                adminBookingsApi.getBookings(1, 50, 'ONGOING') // Get ongoing trips
+              ])
             ])
           } catch (apiError) {
             console.warn('Individual APIs failed, using fallback data:', apiError)
+            activeTripsData = null
           }
         } else {
-          // Also fetch recent bookings for the dashboard
+          // Also fetch recent bookings and active trips for the dashboard
           try {
-            bookingsData = await adminBookingsApi.getBookings(1, 10)
+            [bookingsData, activeTripsData] = await Promise.all([
+              adminBookingsApi.getBookings(1, 10),
+              Promise.all([
+                adminBookingsApi.getBookings(1, 50, 'IN_PROGRESS'),
+                adminBookingsApi.getBookings(1, 50, 'ACTIVE'), 
+                adminBookingsApi.getBookings(1, 50, 'ONGOING')
+              ])
+            ])
           } catch (bookingsError) {
             console.warn('Bookings API failed:', bookingsError)
             bookingsData = { data: { bookings: [] } }
+            activeTripsData = null
           }
         }
 
@@ -116,10 +130,25 @@ export default function DashboardPage() {
           return sum + (booking.totalAmount || booking.amount || 0)
         }, 0) || 0
 
-        // Filter active trips
-        const activeTrips = bookingsData?.data?.bookings?.filter((b: any) => 
-          b.status === 'IN_PROGRESS' || b.status === 'ACTIVE' || b.status === 'ONGOING'
-        ) || []
+        // Combine all active trips from different statuses
+        let activeTrips = []
+        if (activeTripsData) {
+          const [inProgressTrips, activeTripsResponse, ongoingTrips] = activeTripsData
+          activeTrips = [
+            ...(inProgressTrips?.data?.bookings || []),
+            ...(activeTripsResponse?.data?.bookings || []),
+            ...(ongoingTrips?.data?.bookings || [])
+          ]
+          // Remove duplicates based on ID
+          activeTrips = activeTrips.filter((trip, index, self) => 
+            index === self.findIndex(t => t.id === trip.id)
+          )
+        } else {
+          // Fallback to filtering from general bookings
+          activeTrips = bookingsData?.data?.bookings?.filter((b: any) => 
+            b.status === 'IN_PROGRESS' || b.status === 'ACTIVE' || b.status === 'ONGOING'
+          ) || []
+        }
 
         if (dashboardData.success) {
           // Use dashboard API data
@@ -173,6 +202,15 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData()
+    
+    // Set up periodic refresh for active trips (every 30 seconds)
+    const interval = setInterval(() => {
+      if (isAuthenticated) {
+        fetchDashboardData()
+      }
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [isAuthenticated])
 
   if (!isAuthenticated || loading) {

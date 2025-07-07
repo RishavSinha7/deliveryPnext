@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,39 +45,92 @@ const driverProfileSchema = z.object({
   languagesSpoken: z.string().optional(),
 });
 
-export const ProfileTab = () => {
+export interface DriverProfile {
+  id: string;
+  userId: string;
+  aadhaarNumber: string;
+  licenseNumber: string;
+  experienceYears: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  emergencyContactName?: string;
+  emergencyContactNumber?: string;
+  languagesSpoken?: string;
+  isOnline: boolean;
+  isVerified: boolean;
+  user: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    profileImage?: string;
+    dateOfBirth?: string;
+  };
+}
+
+interface ProfileTabProps {
+  driverProfile: DriverProfile | null;
+  isLoading: boolean;
+  onUpdateProfile: (data: any) => Promise<void>;
+}
+
+export const ProfileTab = ({ driverProfile, isLoading, onUpdateProfile }: ProfileTabProps) => {
   const { toast } = useToast();
 
   // Driver profile form
   const driverProfileForm = useForm({
     resolver: zodResolver(driverProfileSchema),
     defaultValues: {
-      fullName: "Rajesh Kumar",
-      email: "rajesh.kumar@example.com",
-      phoneNumber: "9876543210",
-      dateOfBirth: "1990-05-15",
-      aadhaarNumber: "123456789012",
-      address: "123, MG Road, Bangalore",
-      city: "Bangalore",
-      state: "Karnataka",
-      pincode: "560001",
-      emergencyContactName: "Sunita Kumar",
-      emergencyContactNumber: "9876543211",
-      licenseNumber: "KA0220220001234",
-      experienceYears: "5",
-      languagesSpoken: "English, Hindi, Kannada",
+      fullName: driverProfile?.user?.fullName || "",
+      email: driverProfile?.user?.email || "",
+      phoneNumber: driverProfile?.user?.phoneNumber || "",
+      dateOfBirth: driverProfile?.user?.dateOfBirth || "",
+      aadhaarNumber: driverProfile?.aadhaarNumber || "",
+      address: driverProfile?.address || "",
+      city: driverProfile?.city || "",
+      state: driverProfile?.state || "",
+      pincode: driverProfile?.pincode || "",
+      emergencyContactName: driverProfile?.emergencyContactName || "",
+      emergencyContactNumber: driverProfile?.emergencyContactNumber || "",
+      licenseNumber: driverProfile?.licenseNumber || "",
+      experienceYears: driverProfile?.experienceYears?.toString() || "",
+      languagesSpoken: driverProfile?.languagesSpoken || "",
     },
   });
 
   // Handle profile update submission
-  const onProfileUpdateSubmit = (data: z.infer<typeof driverProfileSchema>) => {
-    console.log("Driver Profile Update Data:", data);
-    
-    toast({
-      title: "Profile Updated Successfully! 🎉",
-      description: "Your personal information has been updated",
-    });
+  const onProfileUpdateSubmit = async (data: z.infer<typeof driverProfileSchema>) => {
+    try {
+      await onUpdateProfile(data);
+      toast({
+        title: "Profile Updated Successfully! 🎉",
+        description: "Your personal information has been updated",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <Card className="border-0 bg-gradient-to-r from-blue-50 to-indigo-100">
+          <CardContent className="p-4 sm:p-6">
+            <div className="animate-pulse">
+              <div className="h-20 w-20 bg-blue-200 rounded-full mb-4"></div>
+              <div className="h-6 bg-blue-200 rounded w-1/2 mb-2"></div>
+              <div className="h-4 bg-blue-200 rounded w-1/3"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -466,5 +520,3 @@ export const ProfileTab = () => {
     </div>
   );
 };
-
-export default ProfileTab;

@@ -34,22 +34,13 @@ export default function ReportsPage() {
 
       switch (reportType) {
         case "bookings":
-          response = await adminReportsApi.getBookingReport(
-            startDate.toISOString().split('T')[0],
-            endDate.toISOString().split('T')[0]
-          )
+          response = await adminReportsApi.getBookingReport()
           break
         case "earnings":
-          response = await adminReportsApi.getEarningsReport(
-            startDate.toISOString().split('T')[0],
-            endDate.toISOString().split('T')[0]
-          )
+          response = await adminReportsApi.getEarningsReport()
           break
         case "drivers":
-          response = await adminReportsApi.getDriverReport(
-            startDate.toISOString().split('T')[0],
-            endDate.toISOString().split('T')[0]
-          )
+          response = await adminReportsApi.getDriverReport()
           break
         default:
           throw new Error("Invalid report type")
@@ -109,6 +100,26 @@ export default function ReportsPage() {
     }
   }
 
+  const generateBookingReport = async () => {
+    const response = await adminReportsApi.getBookingReport();
+    setReportData(response.data);
+  };
+
+  const generateEarningsReport = async () => {
+    const response = await adminReportsApi.getEarningsReport();
+    setReportData(response.data);
+  };
+
+  const generateDriverReport = async () => {
+    const response = await adminReportsApi.getDriverReport();
+    setReportData(response.data);
+  };
+
+  const handleBackup = async () => {
+    const response = await adminReportsApi.createBackup();
+    toast({ title: "Backup", description: response.data.backupTime });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -147,7 +158,7 @@ export default function ReportsPage() {
                 <SelectTrigger id="report-type">
                   <SelectValue placeholder="Select report type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                   <SelectItem value="bookings">Booking Report</SelectItem>
                   <SelectItem value="earnings">Earnings Report</SelectItem>
                   <SelectItem value="drivers">Driver Report</SelectItem>

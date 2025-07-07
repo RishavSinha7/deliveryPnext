@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Navigation, Loader2, RefreshCw } from 'lucide-react';
+import { Trip } from './ActiveTripsTab';
 
 // Define validation schema for location update
 const locationUpdateSchema = z.object({
@@ -35,7 +36,12 @@ interface LocationData {
   timestamp: Date;
 }
 
-export const TripUpdateTab = () => {
+interface TripUpdateTabProps {
+  activeTrips: Trip[];
+  onUpdateLocation: (bookingId: string, latitude: number, longitude: number) => Promise<void>;
+}
+
+export const TripUpdateTab = ({ activeTrips, onUpdateLocation }: TripUpdateTabProps) => {
   const { toast } = useToast();
   const [isLocating, setIsLocating] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
@@ -155,7 +161,7 @@ export const TripUpdateTab = () => {
   };
 
   // Handle location update submission
-  const onLocationUpdateSubmit = (data: LocationUpdateFormData) => {
+  const onLocationUpdateSubmit = async (data: LocationUpdateFormData) => {
     console.log("Location Update Data:", data);
     
     if (!currentLocation) {
@@ -166,23 +172,41 @@ export const TripUpdateTab = () => {
       });
       return;
     }
+
+    // Update location for all active trips
+    try {
+      const activeTripsInProgress = activeTrips.filter(trip => 
+        trip.status === 'IN_PROGRESS' || trip.status === 'STARTED'
+      );
+
+      if (activeTripsInProgress.length === 0) {
+        toast({
+          title: "No active trips",
+          description: "You don't have any active trips to update location for.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update location for each active trip
+      for (const trip of activeTripsInProgress) {
+        await onUpdateLocation(trip.bookingId, data.latitude, data.longitude);
+      }
     
-    // Simulate API call to update driver location
-    const updateData = {
-      ...data,
-      timestamp: currentLocation.timestamp,
-      driverId: "DRIVER_001", // This would come from auth context
-    };
+      toast({
+        title: "Location Updated",
+        description: `Your location has been updated for ${activeTripsInProgress.length} active trip(s)`,
+      });
     
-    console.log("Sending location update:", updateData);
-    
-    toast({
-      title: "Location Updated",
-      description: `Your location has been updated successfully at ${currentLocation.address}`,
-    });
-    
-    // Reset only the notes field, keep location data
-    locationForm.setValue('notes', '');
+      // Reset only the notes field, keep location data
+      locationForm.setValue('notes', '');
+    } catch (error: any) {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update location",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -300,5 +324,3 @@ export const TripUpdateTab = () => {
     </div>
   );
 };
-
-export default TripUpdateTab;

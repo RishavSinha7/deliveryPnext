@@ -42,15 +42,18 @@ export default function BookingsPage() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined)
   const [endDate, setEndDate] = useState<Date | undefined>(undefined)
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [selectedBookingForAssignment, setSelectedBookingForAssignment] = useState<string | null>(null);
   const { toast } = useToast()
 
   // Fetch bookings data
   useEffect(() => {
     fetchBookings()
+    fetchDrivers() // Fetch drivers on component mount
   }, [])
 
   const fetchBookings = async () => {
@@ -58,6 +61,7 @@ export default function BookingsPage() {
       setLoading(true)
       setError(null)
       const response = await adminBookingsApi.getBookings(1, 100) // Get more bookings for better filtering
+      
       if (response.success) {
         setBookings(response.data?.bookings || [])
       } else {
@@ -80,6 +84,26 @@ export default function BookingsPage() {
       setLoading(false)
     }
   }
+
+  // Fetch drivers for assignment dropdown
+  const fetchDrivers = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/admin/drivers`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken') || localStorage.getItem('authToken')}`
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDrivers(result.data || []);
+      } else {
+        console.error('Failed to fetch drivers:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching drivers:', error);
+    }
+  };
 
   // Filter bookings based on search term, status, and date range
   const filteredBookings = bookings.filter(booking => {
@@ -104,43 +128,58 @@ export default function BookingsPage() {
       case "COMPLETED":
         return <Badge className="bg-green-500">Completed</Badge>
       case "IN_PROGRESS":
-      case "ONGOING":
         return <Badge className="bg-blue-500">In Progress</Badge>
+      case "DRIVER_ARRIVED":
+        return <Badge className="bg-indigo-500">Driver Arrived</Badge>
+      case "DRIVER_ASSIGNED":
+        return <Badge className="bg-purple-500">Driver Assigned</Badge>
       case "PENDING":
         return <Badge className="bg-yellow-500">Pending</Badge>
       case "CANCELLED":
         return <Badge className="bg-red-500">Cancelled</Badge>
-      case "ASSIGNED":
-        return <Badge className="bg-purple-500">Assigned</Badge>
+      case "CONFIRMED":
+        return <Badge className="bg-cyan-500">Confirmed</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
     }
   }
 
-  const handleStatusUpdate = async (bookingId: string, newStatus: string) => {
+  const handleAssignDriver = async (bookingId: string, driverId: string) => {
     try {
-      const response = await adminBookingsApi.updateBookingStatus(bookingId, newStatus)
+      const response = await adminBookingsApi.assignDriver(bookingId, driverId);
+      
       if (response.success) {
-        toast({
-          title: "Success",
-          description: "Booking status updated successfully"
-        })
-        fetchBookings() // Refresh the data
+        toast({ title: "Success", description: "Driver assigned successfully" });
+        fetchBookings(); // Refresh bookings
       } else {
-        toast({
-          title: "Error",
-          description: response.message || 'Failed to update booking status',
-          variant: "destructive"
-        })
+        toast({ 
+          title: "Error", 
+          description: response.message || 'Failed to assign driver', 
+          variant: "destructive" 
+        });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update booking status",
-        variant: "destructive"
-      })
+      toast({ 
+        title: "Error", 
+        description: 'Failed to assign driver', 
+        variant: "destructive" 
+      });
     }
-  }
+  };
+
+  const handleCancelBooking = async (bookingId: string) => {
+    try {
+      const response = await adminBookingsApi.updateBookingStatus(bookingId, 'CANCELLED');
+      if (response.success) {
+        toast({ title: "Success", description: "Booking cancelled successfully" });
+        fetchBookings();
+      } else {
+        toast({ title: "Error", description: response.message || 'Failed to cancel booking', variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to cancel booking", variant: "destructive" });
+    }
+  };
 
   const handleExportCSV = () => {
     // Create CSV content
@@ -231,7 +270,7 @@ export default function BookingsPage() {
                 <SelectTrigger id="status">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
@@ -284,7 +323,27 @@ export default function BookingsPage() {
                 <TableRow key={booking.id}>
                   <TableCell className="font-medium">{booking.bookingNumber}</TableCell>
                   <TableCell>{booking.customer.fullName}</TableCell>
-                  <TableCell>{booking.driver?.user.fullName || 'Unassigned'}</TableCell>
+                  <TableCell>
+                    {booking.driver?.user.fullName || (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">Unassigned</span>
+                        {booking.status === 'PENDING' && (
+                          <Select onValueChange={(driverId) => handleAssignDriver(booking.id, driverId)}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue placeholder="Assign" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
+                              {drivers.map((driver) => (
+                                <SelectItem key={driver.id} value={driver.id}>
+                                  {driver.fullName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell>{new Date(booking.pickupDateTime).toLocaleDateString()}</TableCell>
                   <TableCell>${(booking.actualFare || booking.estimatedFare).toFixed(2)}</TableCell>
                   <TableCell>{getStatusBadge(booking.status)}</TableCell>
@@ -301,26 +360,14 @@ export default function BookingsPage() {
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        {booking.status === 'PENDING' && (
-                          <DropdownMenuItem onClick={() => handleStatusUpdate(booking.id, 'ASSIGNED')}>
-                            <Edit className="mr-2 h-4 w-4" />
+                        {booking.status === 'PENDING' && !booking.driver && (
+                          <DropdownMenuItem onClick={() => setSelectedBookingForAssignment(booking.id)}>
+                            <User className="mr-2 h-4 w-4" />
                             Assign Driver
                           </DropdownMenuItem>
                         )}
-                        {booking.status === 'ASSIGNED' && (
-                          <DropdownMenuItem onClick={() => handleStatusUpdate(booking.id, 'IN_PROGRESS')}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Start Trip
-                          </DropdownMenuItem>
-                        )}
-                        {booking.status === 'IN_PROGRESS' && (
-                          <DropdownMenuItem onClick={() => handleStatusUpdate(booking.id, 'COMPLETED')}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Complete Trip
-                          </DropdownMenuItem>
-                        )}
                         <DropdownMenuItem>
-                          <User className="mr-2 h-4 w-4" />
+                          <Phone className="mr-2 h-4 w-4" />
                           Contact Customer
                         </DropdownMenuItem>
                         {booking.driver && (
@@ -331,7 +378,7 @@ export default function BookingsPage() {
                         )}
                         {booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED' && (
                           <DropdownMenuItem 
-                            onClick={() => handleStatusUpdate(booking.id, 'CANCELLED')}
+                            onClick={() => handleCancelBooking(booking.id)}
                             className="text-red-600"
                           >
                             Cancel Booking
