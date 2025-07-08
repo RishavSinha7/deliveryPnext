@@ -47,21 +47,61 @@ async function apiCall<T>(
 ): Promise<ApiResponse<T>> {
   const token = localStorage.getItem('authToken');
   
+  // Debug token information with more details
+  console.log('🔐 API Call Token Debug:', {
+    hasToken: !!token,
+    tokenLength: token?.length,
+    tokenPrefix: token?.substring(0, 20) + '...',
+    tokenSuffix: token ? '...' + token.substring(token.length - 20) : 'No token',
+    endpoint,
+    method: options.method || 'GET',
+    timestamp: new Date().toISOString()
+  });
+  
   // Check if the body is FormData
   const isFormData = options.body instanceof FormData;
   
+  // Build headers properly
+  const headers: Record<string, string> = {};
+  
+  // Add Content-Type only for non-FormData requests
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  // Always add Authorization header if token exists
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  // Merge with provided headers, but preserve our Authorization header
+  const finalHeaders: Record<string, string> = {
+    ...headers,
+    ...(options.headers as Record<string, string> || {}),
+  };
+  
+  // Ensure Authorization header is always present if we have a token
+  if (token && !finalHeaders['Authorization']) {
+    finalHeaders['Authorization'] = `Bearer ${token}`;
+  }
+  
   const config: RequestInit = {
     mode: 'cors',
-    headers: {
-      // Don't set Content-Type for FormData (browser will set it with boundary)
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
+    headers: finalHeaders,
     ...options,
   };
 
-  console.log('API Call:', `${API_BASE_URL}${endpoint}`, config);
+  console.log('API Call Details:', {
+    url: `${API_BASE_URL}${endpoint}`,
+    hasToken: !!token,
+    tokenLength: token?.length,
+    method: config.method || 'GET',
+    hasBody: !!config.body,
+    isFormData,
+    headers: Object.keys(finalHeaders),
+    authHeaderPresent: !!finalHeaders['Authorization'],
+    authHeaderValue: finalHeaders['Authorization'] ? finalHeaders['Authorization'].substring(0, 20) + '...' : 'No auth header'
+  });
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
@@ -83,14 +123,35 @@ async function apiCall<T>(
       let errorDetails = null;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
+        errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
         errorDetails = errorData.error || errorData.data || null;
-        console.error('API error response:', errorData);
-        console.error('Response status:', response.status);
+        
+        // Enhanced error logging
+        console.error('API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: `${API_BASE_URL}${endpoint}`,
+          method: config.method || 'GET',
+          errorData,
+          hasToken: !!token,
+          tokenPresent: token ? 'Yes' : 'No'
+        });
         console.error('Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        // Handle 401 Unauthorized - token expired or invalid
+        if (response.status === 401 && token) {
+          console.warn('🔒 Token appears to be invalid or expired, clearing local storage');
+          localStorage.removeItem('authToken');
+          // Optionally redirect to login page or emit an event
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('token-expired'));
+          }
+        }
       } catch (e) {
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         console.error('Failed to parse error response:', e);
+        console.error('Raw response status:', response.status);
+        console.error('Raw response statusText:', response.statusText);
       }
       
       // If it's a validation error, try to parse and show more specific details
@@ -113,9 +174,26 @@ async function apiCall<T>(
     console.log('Response data:', data);
     return data;
   } catch (error) {
-    console.error('API call error:', error);
+    // Enhanced error logging to avoid empty object logs
+    const errorDetails = {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      name: error instanceof Error ? error.name : 'UnknownError',
+      stack: error instanceof Error ? error.stack : undefined,
+      url: `${API_BASE_URL}${endpoint}`,
+      method: config.method || 'GET',
+      hasToken: !!token,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.error('🚨 API call failed:', errorDetails);
     console.error('API_BASE_URL:', API_BASE_URL);
     console.error('Full URL:', `${API_BASE_URL}${endpoint}`);
+    
+    // Provide more specific error messages for common issues
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      throw new Error(`Unable to connect to the server at ${API_BASE_URL}. Please ensure the backend server is running on port 5000.`);
+    }
+    
     throw error;
   }
 }
@@ -263,11 +341,20 @@ export const vehicleApi = {
   createVehicle: async (vehicleData: FormData | any): Promise<ApiResponse<any>> => {
     const isFormData = vehicleData instanceof FormData;
     
-    return apiCall('/vehicles', {
+    console.log('🚗 Creating vehicle with data type:', isFormData ? 'FormData' : 'JSON');
+    
+    const requestOptions: RequestInit = {
       method: 'POST',
       body: isFormData ? vehicleData : JSON.stringify(vehicleData),
-      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
-    });
+    };
+    
+    // Important: Let apiCall handle headers including Authorization
+    // Only add Content-Type for non-FormData requests (apiCall will handle this)
+    if (!isFormData) {
+      requestOptions.headers = { 'Content-Type': 'application/json' };
+    }
+    
+    return apiCall('/vehicles', requestOptions);
   },
 
   // Update vehicle

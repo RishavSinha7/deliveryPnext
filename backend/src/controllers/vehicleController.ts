@@ -43,6 +43,7 @@ class VehicleController {
     try {
       console.log('🚗 createVehicle - User:', req.user);
       console.log('🚗 createVehicle - Request body:', req.body);
+      console.log('🚗 createVehicle - Files:', req.files);
       
       if (!req.user) {
         return res.status(401).json(
@@ -67,10 +68,7 @@ class VehicleController {
         vehicleNumber,
         vehicleModel,
         yearOfManufacture,
-        insuranceNumber,
-        registrationDocument,
-        insuranceDocument,
-        pollutionDocument
+        insuranceNumber
       } = req.body;
 
       // Basic validation
@@ -90,6 +88,12 @@ class VehicleController {
         );
       }
 
+      // Handle file uploads
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const rcDocument = files?.rcDocument?.[0]?.filename || null;
+      const insuranceDocument = files?.insuranceDocument?.[0]?.filename || null;
+      const pollutionDocument = files?.pollutionDocument?.[0]?.filename || null;
+
       const vehicle = await prisma.vehicle.create({
         data: {
           driverProfileId: driverProfile.id,
@@ -98,9 +102,10 @@ class VehicleController {
           vehicleModel,
           yearOfManufacture,
           insuranceNumber,
-          registrationDocument,
-          insuranceDocument,
-          pollutionDocument
+          registrationDocument: rcDocument,
+          insuranceDocument: insuranceDocument,
+          pollutionDocument: pollutionDocument,
+          isVerified: false // Set to false for admin approval
         }
       });
 
@@ -158,12 +163,12 @@ class VehicleController {
         vehicleNumber,
         vehicleModel,
         yearOfManufacture,
-        insuranceNumber,
-        registrationDocument,
-        insuranceDocument,
-        pollutionDocument
+        insuranceNumber
       } = req.body;
 
+      // Handle file uploads
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
       // Only update provided fields
       const updateData: any = {};
       if (vehicleType) updateData.vehicleType = vehicleType;
@@ -171,9 +176,17 @@ class VehicleController {
       if (vehicleModel) updateData.vehicleModel = vehicleModel;
       if (yearOfManufacture) updateData.yearOfManufacture = yearOfManufacture;
       if (insuranceNumber) updateData.insuranceNumber = insuranceNumber;
-      if (registrationDocument) updateData.registrationDocument = registrationDocument;
-      if (insuranceDocument) updateData.insuranceDocument = insuranceDocument;
-      if (pollutionDocument) updateData.pollutionDocument = pollutionDocument;
+      
+      // Update document files if provided
+      if (files?.rcDocument?.[0]) {
+        updateData.registrationDocument = files.rcDocument[0].filename;
+      }
+      if (files?.insuranceDocument?.[0]) {
+        updateData.insuranceDocument = files.insuranceDocument[0].filename;
+      }
+      if (files?.pollutionDocument?.[0]) {
+        updateData.pollutionDocument = files.pollutionDocument[0].filename;
+      }
 
       // If vehicleNumber is being updated, check for duplicates
       if (vehicleNumber && vehicleNumber !== vehicle.vehicleNumber) {
@@ -303,7 +316,10 @@ class VehicleController {
 
       const updatedVehicle = await prisma.vehicle.update({
         where: { id },
-        data: { isVerified: true }
+        data: { 
+          isVerified: true,
+          isActive: true // Also activate the vehicle when verified
+        }
       });
 
       logger.info(`Vehicle verified: ${updatedVehicle.vehicleNumber} by admin`);

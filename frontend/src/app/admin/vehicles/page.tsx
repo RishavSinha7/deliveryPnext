@@ -64,19 +64,26 @@ export default function VehiclesPage() {
     try {
       setLoading(true)
       setError(null)
+      console.log('Fetching vehicles from admin API...')
       const response = await adminVehiclesApi.getVehicles()
+      console.log('Vehicles API response:', response)
+      
       if (response.success) {
         setVehicles(response.data || [])
+        console.log('Vehicles loaded:', response.data?.length || 0)
       } else {
-        setError(response.message || 'Failed to fetch vehicles')
+        const errorMessage = response.message || 'Failed to fetch vehicles'
+        console.error('Failed to fetch vehicles:', errorMessage)
+        setError(errorMessage)
         toast({
           title: "Error",
-          description: response.message || 'Failed to fetch vehicles',
+          description: errorMessage,
           variant: "destructive"
         })
       }
-    } catch (err) {
-      const errorMessage = 'Failed to fetch vehicles'
+    } catch (err: any) {
+      console.error('Vehicles fetch error:', err)
+      const errorMessage = err.message || 'Failed to fetch vehicles'
       setError(errorMessage)
       toast({
         title: "Error",
@@ -115,6 +122,31 @@ export default function VehiclesPage() {
       return <Badge className="bg-green-500">Active</Badge>
     } else {
       return <Badge variant="outline">Inactive</Badge>
+    }
+  }
+
+  const handleVerifyVehicle = async (vehicleId: string) => {
+    try {
+      const response = await adminVehiclesApi.verifyVehicle(vehicleId)
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Vehicle verified successfully"
+        })
+        await fetchVehicles() // Refresh the list
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to verify vehicle",
+          variant: "destructive"
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to verify vehicle",
+        variant: "destructive"
+      })
     }
   }
 
@@ -368,6 +400,7 @@ export default function VehiclesPage() {
                     <TableHead>License Plate</TableHead>
                     <TableHead>Driver</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Documents</TableHead>
                     <TableHead>Last Maintenance</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -381,6 +414,40 @@ export default function VehiclesPage() {
                       <TableCell>{vehicle.vehicleNumber}</TableCell>
                       <TableCell>{vehicle.driverProfile?.user.fullName || 'Unassigned'}</TableCell>
                       <TableCell>{getStatusBadge(vehicle)}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {vehicle.registrationDocument && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(`http://localhost:5000/uploads/vehicle-documents/${vehicle.registrationDocument}`, '_blank')}
+                            >
+                              RC
+                            </Button>
+                          )}
+                          {vehicle.insuranceDocument && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(`http://localhost:5000/uploads/vehicle-documents/${vehicle.insuranceDocument}`, '_blank')}
+                            >
+                              Insurance
+                            </Button>
+                          )}
+                          {vehicle.pollutionDocument && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(`http://localhost:5000/uploads/vehicle-documents/${vehicle.pollutionDocument}`, '_blank')}
+                            >
+                              PUC
+                            </Button>
+                          )}
+                          {!vehicle.registrationDocument && !vehicle.insuranceDocument && !vehicle.pollutionDocument && (
+                            <span className="text-gray-400 text-sm">No documents</span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{new Date(vehicle.updatedAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
@@ -388,6 +455,17 @@ export default function VehiclesPage() {
                             <Edit className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
                           </Button>
+                          {!vehicle.isVerified && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleVerifyVehicle(vehicle.id)}
+                              className="bg-green-50 hover:bg-green-100 text-green-600"
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Verify
+                            </Button>
+                          )}
                           {vehicle.isVerified && (
                             <Button 
                               variant="outline" 

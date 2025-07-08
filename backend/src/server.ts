@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import 'express-async-errors';
 
 import { config } from './config';
@@ -24,15 +25,22 @@ const app = express();
 // Trust proxy
 app.set('trust proxy', 1);
 
-// Rate limiting
+// Rate limiting - more lenient in development
 const limiter = rateLimit({
   windowMs: config.rateLimitWindowMs,
-  max: config.rateLimitMaxRequests,
+  max: config.nodeEnv === 'development' ? 10000 : config.rateLimitMaxRequests, // 10k requests in dev, normal limit in production
   message: {
     error: 'Too many requests from this IP, please try again later.',
+    retryAfter: Math.ceil(config.rateLimitWindowMs / 1000), // seconds to wait
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for health checks and static files
+    return req.path === '/api/health' || 
+           req.path.startsWith('/uploads/') ||
+           (config.nodeEnv === 'development' && req.path.startsWith('/api/auth'));
+  }
 });
 
 // Security middlewares
@@ -58,6 +66,9 @@ app.use(cors({
   exposedHeaders: ['Set-Cookie'],
   preflightContinue: false
 }));
+
+// Static file serving for uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Body parsing middlewares
 app.use(express.json({ limit: '10mb' }));

@@ -18,8 +18,8 @@ export const config = {
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   
   // Rate Limiting
-  rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  rateLimitMaxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+  rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '300000'), // 5 minutes (reduced from 15)
+  rateLimitMaxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'), // 1000 requests (increased from 100)
   
   // Logging
   logLevel: process.env.LOG_LEVEL || 'info',
