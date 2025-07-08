@@ -17,11 +17,13 @@ import { useToast } from "@/hooks/use-toast"
 
 interface User {
   id: string
-  name: string
+  fullName: string
   email: string
-  phone?: string
+  phoneNumber?: string
   role: string
   isActive: boolean
+  isEmailVerified: boolean
+  isPhoneVerified: boolean
   createdAt: string
   totalBookings?: number
   customerProfile?: any
@@ -256,10 +258,10 @@ export default function UsersPage() {
                   users.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">
-                        {user.name || 'N/A'}
+                        {user.fullName || 'N/A'}
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.phone || 'N/A'}</TableCell>
+                      <TableCell>{user.phoneNumber || 'N/A'}</TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
                       <TableCell>{getStatusBadge(user.isActive)}</TableCell>
                       <TableCell>
@@ -349,7 +351,7 @@ export default function UsersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Name</Label>
-                  <p className="text-sm text-muted-foreground">{selectedUser.name || 'N/A'}</p>
+                  <p className="text-sm text-muted-foreground">{selectedUser.fullName || 'N/A'}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Email</Label>
@@ -357,7 +359,7 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Phone</Label>
-                  <p className="text-sm text-muted-foreground">{selectedUser.phone || 'N/A'}</p>
+                  <p className="text-sm text-muted-foreground">{selectedUser.phoneNumber || 'N/A'}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Role</Label>
@@ -366,6 +368,22 @@ export default function UsersPage() {
                 <div>
                   <Label className="text-sm font-medium">Status</Label>
                   <div className="mt-1">{getStatusBadge(selectedUser.isActive)}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Email Verified</Label>
+                  <div className="mt-1">
+                    <Badge variant={selectedUser.isEmailVerified ? "default" : "destructive"}>
+                      {selectedUser.isEmailVerified ? "Verified" : "Not Verified"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Phone Verified</Label>
+                  <div className="mt-1">
+                    <Badge variant={selectedUser.isPhoneVerified ? "default" : "destructive"}>
+                      {selectedUser.isPhoneVerified ? "Verified" : "Not Verified"}
+                    </Badge>
+                  </div>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Registered</Label>

@@ -35,6 +35,10 @@ export interface Vehicle {
   yearOfManufacture: string;
   insuranceNumber: string;
   isActive: boolean;
+  isVerified: boolean;
+  registrationDocument?: string;
+  insuranceDocument?: string;
+  pollutionDocument?: string;
 }
 
 export interface Trip {
@@ -238,15 +242,33 @@ export const useDriverData = () => {
   // Add vehicle
   const addVehicle = async (vehicleData: any) => {
     try {
+      console.log('🚗 Adding vehicle via hook:', {
+        hasVehicleData: !!vehicleData,
+        isFormData: vehicleData instanceof FormData,
+        timestamp: new Date().toISOString()
+      });
+      
       const response = await vehicleApi.createVehicle(vehicleData);
+      
+      console.log('✅ Vehicle creation response:', {
+        success: response.success,
+        message: response.message,
+        hasData: !!response.data
+      });
+      
       if (response.success) {
         await fetchDriverProfile(); // Refresh profile to get updated vehicles
         return response;
       }
       throw new Error(response.message || 'Failed to add vehicle');
     } catch (error: any) {
-      console.error('Error adding vehicle:', error);
-      throw error;
+      const errorMessage = error?.message || 'Unknown error occurred while adding vehicle';
+      console.error('❌ Error adding vehicle:', {
+        message: errorMessage,
+        error: error,
+        timestamp: new Date().toISOString()
+      });
+      throw new Error(errorMessage);
     }
   };
 

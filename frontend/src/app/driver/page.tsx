@@ -25,7 +25,6 @@ import { useDriverData } from '@/hooks/use-driver-data';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { AuthRedirect } from '@/components/auth-redirect';
-import { AuthDebug } from '@/components/debug/AuthDebug';
 
 export default function DriverPanelPage() {
   const router = useRouter();
@@ -202,9 +201,6 @@ export default function DriverPanelPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Debug component - remove in production */}
-        <AuthDebug />
-        
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Navigation */}
           <div className="hidden md:block">

@@ -53,6 +53,14 @@ frontend/logs/
 **/fix-*.js
 **/reset-*.js
 **/temp-*.js
+**/debug-*.sh
+**/debug-*.ts
+**/test-*.pdf
+**/test-*.png
+**/test-*.jpg
+**/*-old.*
+**/*-new.*
+**/*-backup.*
 
 # compiled prisma files
 **/prisma/*.js
@@ -62,3 +70,7 @@ frontend/logs/
 
 # backend dist files (generated)
 backend/dist/
+
+# uploads directory (runtime files)
+backend/uploads/*
+!backend/uploads/.gitkeep

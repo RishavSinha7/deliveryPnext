@@ -2,6 +2,7 @@ import express from 'express';
 import { vehicleController } from '../controllers/vehicleController';
 import { authenticate, authorize } from '../middlewares/auth';
 import { validateBody } from '../middlewares/validation';
+import { uploadVehicleDocuments } from '../middlewares/upload';
 
 const router = express.Router();
 
@@ -10,8 +11,8 @@ router.use(authenticate);
 
 // Driver routes
 router.get('/my-vehicles', authorize('DRIVER'), vehicleController.getMyVehicles);
-router.post('/', authorize('DRIVER'), vehicleController.createVehicle);
-router.put('/:id', authorize('DRIVER'), vehicleController.updateVehicle);
+router.post('/', authorize('DRIVER'), uploadVehicleDocuments, vehicleController.createVehicle);
+router.put('/:id', authorize('DRIVER'), uploadVehicleDocuments, vehicleController.updateVehicle);
 router.delete('/:id', authorize('DRIVER'), vehicleController.deleteVehicle);
 
 // Admin routes
