@@ -364,12 +364,16 @@ export const adminCouponsApi = {
     });
   },
   
-  // Activate/Deactivate coupon
-  toggleCouponStatus: async (id: string, isActive: boolean) => {
-    return apiCall(`/coupons/${id}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ isActive })
+  // Toggle coupon status (active/inactive)
+  toggleCouponStatus: async (id: string) => {
+    return apiCall(`/coupons/${id}/toggle-status`, {
+      method: 'PATCH'
     });
+  },
+  
+  // Get coupon statistics
+  getCouponStats: async () => {
+    return apiCall('/coupons/stats');
   }
 };
 
