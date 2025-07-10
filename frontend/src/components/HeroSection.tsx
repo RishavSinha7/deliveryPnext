@@ -1,4 +1,6 @@
 
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from 'lucide-react';
 
@@ -17,7 +19,7 @@ const HeroSection = () => {
           <div className="text-left pt-2">
             <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm font-medium mb-6">
               <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-              Now live in 38 Districts of Bihar
+              Now live in multiple cities across India
             </div>
             
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-6">

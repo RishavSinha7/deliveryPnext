@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Calendar } from "lucide-react";
 
 import { useJsApiLoader } from "@react-google-maps/api";
 import { MAPS_API_KEY } from "./utils/mapsApiKey";
@@ -26,6 +26,11 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    // Set default to current date and time
+    const now = new Date();
+    return now.toISOString().slice(0, 16); // Format for datetime-local input
+  });
   const originRef = useRef<HTMLInputElement>(null!);
   const destRef = useRef<HTMLInputElement>(null!);
 
@@ -47,6 +52,21 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
       alert('Please fill in all required fields');
       return;
     }
+
+    // Validate pickup date
+    if (!selectedDate) {
+      alert('Please select a pickup date');
+      return;
+    }
+
+    const pickupDate = new Date(selectedDate);
+    const now = new Date();
+    
+    // Check if selected date is in the past
+    if (pickupDate < now) {
+      alert('Pickup date cannot be in the past');
+      return;
+    }
     
     try {
       // Check if user is authenticated
@@ -66,7 +86,7 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
         dropoffAddress: dropValue,
         dropoffLatitude: 0,
         dropoffLongitude: 0,
-        pickupDateTime: new Date().toISOString(),
+        pickupDateTime: new Date(selectedDate).toISOString(),
         estimatedFare: 100, // Calculate based on distance
         notes: `Customer: ${customerName}, Phone: ${phoneNumber}, Type: ${customerType}`,
         paymentMethod: 'CASH',
@@ -89,8 +109,8 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
         const result = await response.json();
         const bookingId = result.data.id;
         
-        // Redirect to ride status page with booking ID
-        router.push(`/ride-status?bookingId=${bookingId}&pickup=${encodeURIComponent(pickupValue)}&drop=${encodeURIComponent(dropValue)}&type=${show === 'bike' ? 'bike' : 'truck'}`);
+        // Redirect to ride status page with booking ID and pickup date
+        router.push(`/ride-status?bookingId=${bookingId}&pickup=${encodeURIComponent(pickupValue)}&drop=${encodeURIComponent(dropValue)}&type=${show === 'bike' ? 'bike' : 'truck'}&pickupDate=${encodeURIComponent(selectedDate)}`);
       } else {
         // Get error details from response
         const errorData = await response.json();
@@ -145,7 +165,7 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
         </div>
 
         {/* Floating Card */}
-        <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2 bg-white rounded-lg shadow-xl px-2 md:px-8 py-6 w-[95vw] md:w-[900px] z-20">
+        <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2 bg-white rounded-lg shadow-xl px-2 md:px-8 py-6 w-[95vw] md:w-[1000px] z-20">
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 items-center">
             <div className="flex-2">
               <LocationInput placeholder="Pickup Address " inputRef={originRef} />
@@ -155,6 +175,18 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
             </div>
             <div className="flex-2">
               <input type="text" placeholder="Phone Number" className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+            <div className="flex-2 relative">
+              <input 
+                type="datetime-local" 
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 16)}
+                className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                title="Select pickup date and time"
+                placeholder="Pickup Date & Time"
+              />
+              <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
             <div className="flex-1">
               <input type="text" placeholder="Name" className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400" />

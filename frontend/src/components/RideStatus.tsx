@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { MapPin, Clock, CheckCircle, User, ArrowRight, ArrowDown, RefreshCw } from 'lucide-react';
+import { MapPin, Clock, CheckCircle, User, ArrowRight, ArrowDown, RefreshCw, Calendar } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ interface BookingData {
   pickupAddress: string;
   dropoffAddress: string;
   estimatedFare: number;
+  pickupDateTime: string;
   driver?: {
     user: {
       fullName: string;
@@ -30,6 +31,7 @@ export default function RideStatus() {
   const pickup = searchParams.get('pickup') || 'Pickup Location';
   const drop = searchParams.get('drop') || 'Drop Location';
   const vehicleType = searchParams.get('type') || 'truck';
+  const pickupDate = searchParams.get('pickupDate') || '';
   
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -200,6 +202,23 @@ export default function RideStatus() {
                       </div>
                     </div>
                     
+                    <div className="flex items-center space-x-3">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-500">Pickup Date & Time</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {new Date(bookingData.pickupDateTime).toLocaleString('en-US', {
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    
                     <div className="flex items-start space-x-3">
                       <div className="flex flex-col items-center">
                         <div className="w-0.5 h-12 bg-gray-400"></div>
@@ -248,6 +267,25 @@ export default function RideStatus() {
                     <p className="text-lg font-semibold text-gray-900">{pickup}</p>
                   </div>
                 </div>
+                
+                {pickupDate && (
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-500">Pickup Date & Time</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {new Date(pickupDate).toLocaleString('en-US', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex items-start space-x-3">
                   <div className="flex flex-col items-center">

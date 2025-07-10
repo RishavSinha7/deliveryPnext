@@ -1,101 +1,46 @@
 "use client";
 
 import { useState } from 'react';
-import { Truck, Bike, Package, User, MapPin, Loader2, X } from 'lucide-react';
+import { Truck, Bike, Package, User, MapPin, ChevronDown, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import CitySelectionModal from './CitySelectionModal';
+
+interface City {
+  id: string;
+  name: string;
+  state: string;
+  isActive: boolean;
+  areas: Area[];
+}
+
+interface Area {
+  id: string;
+  name: string;
+  isActive: boolean;
+  cityId: string;
+}
 
 const FeaturesSection = () => {
-  const [currentLocation, setCurrentLocation] = useState('Bihar');
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<string>('Select Your City');
+  const [selectedArea, setSelectedArea] = useState<string>('');
+  const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [isEstimateModalOpen, setIsEstimateModalOpen] = useState(false);
   const { toast } = useToast();
 
-  // Function to get user's current location
-  const getCurrentLocation = () => {
-    setIsLoadingLocation(true);
-    
-    if (!navigator.geolocation) {
-      toast({
-        title: "Geolocation not supported",
-        description: "Your browser does not support geolocation.",
-        variant: "destructive",
-      });
-      setIsLoadingLocation(false);
-      return;
+  const handleCitySelect = (city: City, area?: Area) => {
+    if (area) {
+      setSelectedCity(`${city.name}, ${area.name}`);
+      setSelectedArea(area.name);
+    } else {
+      setSelectedCity(city.name);
+      setSelectedArea('');
     }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          console.log('Location coordinates:', { latitude, longitude });
-          
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
-          );
-          const data = await response.json();
-          console.log('Location data:', data);
-          
-          // Format the address from the response
-          const city = data.address?.city || data.address?.town || data.address?.village || data.address?.state || 'Unknown Location';
-          setCurrentLocation(city);
-          
-          toast({
-            title: "Location detected",
-            description: city,
-          });
-        } catch (error) {
-          console.error('Location fetch error:', error);
-          toast({
-            title: "Error fetching location details",
-            description: "Failed to get location information. Please try again.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLoadingLocation(false);
-        }
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        
-        let errorMessage = "Could not access your location.";
-        let debugInfo = `Error code: ${error.code}`;
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location permission denied. Please allow location access in your browser.";
-            debugInfo += " - Permission denied by user";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information is unavailable.";
-            debugInfo += " - Position unavailable";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out.";
-            debugInfo += " - Request timeout";
-            break;
-          default:
-            errorMessage = "An unknown location error occurred.";
-            debugInfo += " - Unknown error";
-        }
-        
-        console.log('Geolocation debug info:', debugInfo);
-        
-        toast({
-          title: "Location error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        setIsLoadingLocation(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    );
+    toast({
+      title: "City Selected",
+      description: `Services available in ${area ? `${city.name}, ${area.name}` : city.name}`,
+    });
   };
 
   const services = [
@@ -169,21 +114,14 @@ const FeaturesSection = () => {
       <div className="relative z-20 bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md w-full">
         {/* City selector */}
         <button 
-          onClick={getCurrentLocation}
-          disabled={isLoadingLocation}
-          className="flex items-center w-full mb-6 pb-4 border-b border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => setIsCityModalOpen(true)}
+          className="flex items-center w-full mb-6 pb-4 border-b border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200"
         >
-          {isLoadingLocation ? (
-            <Loader2 className="h-5 w-5 text-blue-600 mr-2 animate-spin" />
-          ) : (
-            <MapPin className="h-5 w-5 text-blue-600 mr-2" />
-          )}
+          <MapPin className="h-5 w-5 text-blue-600 mr-2" />
           <span className="text-gray-700 font-medium flex-1 text-left">
-            City: {currentLocation}
+            City: {selectedCity}
           </span>
-          <svg className="w-4 h-4 ml-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          <ChevronDown className="w-4 h-4 ml-2 text-gray-400" />
         </button>
 
         {/* Services grid */}
@@ -264,6 +202,14 @@ const FeaturesSection = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* City Selection Modal */}
+      <CitySelectionModal
+        isOpen={isCityModalOpen}
+        onClose={() => setIsCityModalOpen(false)}
+        onCitySelect={handleCitySelect}
+        selectedCity={selectedCity}
+      />
     </div>
   );
 };

@@ -375,3 +375,30 @@ enum CouponStatus {
   ACTIVE
   INACTIVE
 }
+
+model City {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  state       String
+  isActive    Boolean  @default(false)
+  phase       Int      @default(1)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  areas       Area[]
+
+  @@map("cities")
+}
+
+model Area {
+  id        String   @id @default(cuid())
+  cityId    String
+  name      String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([cityId, name])
+  @@map("areas")
+}

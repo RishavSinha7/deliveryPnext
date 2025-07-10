@@ -20,6 +20,7 @@ import driverRoutes from './routes/drivers';
 import adminRoutes from './routes/admin';
 import notificationRoutes from './routes/notifications';
 import couponRoutes from './routes/coupons';
+import cityRoutes from './routes/cities';
 
 const app = express();
 
@@ -124,6 +125,7 @@ app.use('/api/drivers', driverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/cities', cityRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

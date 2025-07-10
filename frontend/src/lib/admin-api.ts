@@ -509,6 +509,98 @@ export const adminAnalyticsApi = {
   }
 };
 
+// City Management API
+export const adminCitiesApi = {
+  // Get all cities
+  getAllCities: async () => {
+    return apiCall('/cities');
+  },
+  
+  // Get active cities only
+  getActiveCities: async () => {
+    return apiCall('/cities/active');
+  },
+  
+  // Get city by ID
+  getCityById: async (cityId: string) => {
+    return apiCall(`/cities/${cityId}`);
+  },
+  
+  // Create new city
+  createCity: async (cityData: {
+    name: string;
+    state: string;
+    isActive: boolean;
+    areas?: { name: string; isActive: boolean }[];
+  }) => {
+    return apiCall('/cities', {
+      method: 'POST',
+      body: JSON.stringify(cityData)
+    });
+  },
+  
+  // Update city
+  updateCity: async (cityId: string, cityData: {
+    name?: string;
+    state?: string;
+    isActive?: boolean;
+  }) => {
+    return apiCall(`/cities/${cityId}`, {
+      method: 'PUT',
+      body: JSON.stringify(cityData)
+    });
+  },
+  
+  // Delete city
+  deleteCity: async (cityId: string) => {
+    return apiCall(`/cities/${cityId}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  // Toggle city status
+  toggleCityStatus: async (cityId: string) => {
+    return apiCall(`/cities/${cityId}/toggle-status`, {
+      method: 'PATCH'
+    });
+  },
+  
+  // Get areas for a city
+  getCityAreas: async (cityId: string) => {
+    return apiCall(`/cities/${cityId}/areas`);
+  },
+  
+  // Create new area
+  createArea: async (areaData: {
+    name: string;
+    cityId: string;
+    isActive: boolean;
+  }) => {
+    return apiCall('/cities/areas', {
+      method: 'POST',
+      body: JSON.stringify(areaData)
+    });
+  },
+  
+  // Update area
+  updateArea: async (areaId: string, areaData: {
+    name?: string;
+    isActive?: boolean;
+  }) => {
+    return apiCall(`/cities/areas/${areaId}`, {
+      method: 'PUT',
+      body: JSON.stringify(areaData)
+    });
+  },
+  
+  // Delete area
+  deleteArea: async (areaId: string) => {
+    return apiCall(`/cities/areas/${areaId}`, {
+      method: 'DELETE'
+    });
+  }
+};
+
 export default {
   dashboard: adminDashboardApi,
   users: adminUsersApi,
@@ -520,5 +612,6 @@ export default {
   notifications: adminNotificationsApi,
   reports: adminReportsApi,
   settings: adminSettingsApi,
-  analytics: adminAnalyticsApi
+  analytics: adminAnalyticsApi,
+  cities: adminCitiesApi
 };

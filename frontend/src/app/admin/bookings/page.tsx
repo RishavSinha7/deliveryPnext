@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/admin/date-picker"
 import { Download, Filter, Search, Loader2, Eye, Edit, User, Phone } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { adminBookingsApi } from "@/lib/admin-api"
 import { useToast } from "@/hooks/use-toast"
 
@@ -48,6 +49,7 @@ export default function BookingsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedBookingForAssignment, setSelectedBookingForAssignment] = useState<string | null>(null);
+  const [selectedBookingForDetails, setSelectedBookingForDetails] = useState<Booking | null>(null);
   const { toast } = useToast()
 
   // Fetch bookings data
@@ -344,7 +346,14 @@ export default function BookingsPage() {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>{new Date(booking.pickupDateTime).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(booking.pickupDateTime).toLocaleString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}</TableCell>
                   <TableCell>${(booking.actualFare || booking.estimatedFare).toFixed(2)}</TableCell>
                   <TableCell>{getStatusBadge(booking.status)}</TableCell>
                   <TableCell>
@@ -356,7 +365,7 @@ export default function BookingsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSelectedBookingForDetails(booking)}>
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
@@ -393,6 +402,141 @@ export default function BookingsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Booking Details Modal */}
+      <Dialog open={!!selectedBookingForDetails} onOpenChange={() => setSelectedBookingForDetails(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Booking Details - #{selectedBookingForDetails?.bookingNumber}</DialogTitle>
+          </DialogHeader>
+          {selectedBookingForDetails && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Trip Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Service Type</p>
+                      <p className="font-medium">{selectedBookingForDetails.serviceType}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Pickup Address</p>
+                      <p className="font-medium">{selectedBookingForDetails.pickupAddress}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Drop Address</p>
+                      <p className="font-medium">{selectedBookingForDetails.dropoffAddress}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Pickup Date & Time</p>
+                      <p className="font-medium text-blue-600">
+                        {new Date(selectedBookingForDetails.pickupDateTime).toLocaleString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <div className="mt-1">{getStatusBadge(selectedBookingForDetails.status)}</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Customer & Driver</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Customer Name</p>
+                      <p className="font-medium">{selectedBookingForDetails.customer.fullName}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Customer Phone</p>
+                      <p className="font-medium">{selectedBookingForDetails.customer.phoneNumber}</p>
+                    </div>
+                    {selectedBookingForDetails.driver ? (
+                      <>
+                        <div>
+                          <p className="text-sm text-gray-500">Driver Name</p>
+                          <p className="font-medium">{selectedBookingForDetails.driver.user.fullName}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Driver Phone</p>
+                          <p className="font-medium">{selectedBookingForDetails.driver.user.phoneNumber}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <p className="text-sm text-gray-500">Driver</p>
+                        <p className="font-medium text-amber-600">Not assigned yet</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Payment Details</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Estimated Fare</p>
+                      <p className="font-medium">${selectedBookingForDetails.estimatedFare.toFixed(2)}</p>
+                    </div>
+                    {selectedBookingForDetails.actualFare && (
+                      <div>
+                        <p className="text-sm text-gray-500">Actual Fare</p>
+                        <p className="font-medium">${selectedBookingForDetails.actualFare.toFixed(2)}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-gray-500">Payment Method</p>
+                      <p className="font-medium">{selectedBookingForDetails.paymentMethod}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Payment Status</p>
+                      <p className="font-medium">{selectedBookingForDetails.paymentStatus}</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Booking Timeline</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Booking Created</p>
+                      <p className="font-medium">
+                        {new Date(selectedBookingForDetails.createdAt).toLocaleString('en-US', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Scheduled Pickup</p>
+                      <p className="font-medium text-blue-600">
+                        {new Date(selectedBookingForDetails.pickupDateTime).toLocaleString('en-US', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

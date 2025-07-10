@@ -13,6 +13,7 @@ import {
   Bell,
   FileText,
   X,
+  MapPin,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -23,6 +24,7 @@ const sidebarItems = [
   { title: "Drivers", href: "/admin/drivers", icon: Users },
   { title: "Vehicles", href: "/admin/vehicles", icon: Car },
   { title: "Users", href: "/admin/users", icon: Users },
+  { title: "Cities", href: "/admin/cities", icon: MapPin },
   { title: "Coupons", href: "/admin/coupons", icon: Percent },
   { title: "Transactions", href: "/admin/transactions", icon: CreditCard },
   { title: "Notifications", href: "/admin/notifications", icon: Bell },
