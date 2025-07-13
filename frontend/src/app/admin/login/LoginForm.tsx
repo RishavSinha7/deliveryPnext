@@ -106,8 +106,8 @@ const Login: React.FC = () => {
       >
         {/* Left Side: Logo */}
         <div className="w-full md:w-1/2 bg-white/10 flex items-center justify-center py-16 px-6">
-          <Image
-            src="/authlogo.jpg"
+          <img
+            src="https://ik.imagekit.io/vf1wtj1uk/deliverypartners/dp%20logo.jpg?updatedAt=1752338033789"
             alt="Logo"
             width={300}
             height={200}
@@ -128,16 +128,6 @@ const Login: React.FC = () => {
                 }`}
               >
                 Admin
-              </button>
-              <button
-                onClick={() => setRole("vendor")}
-                className={`px-5 py-2 rounded text-sm ${
-                  role === "vendor"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-200 text-black"
-                }`}
-              >
-                Vendor
               </button>
             </div>
 

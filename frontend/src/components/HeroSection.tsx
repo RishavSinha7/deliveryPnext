@@ -34,45 +34,17 @@ const HeroSection = () => {
               Move anything, anywhere within the city at the tap of a button
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button 
-                size="lg" 
-                className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-4 text-lg rounded-xl shadow-xl transform hover:scale-105 transition-all duration-200"
-              >
-                Book Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-4 text-lg rounded-xl shadow-xl transform hover:scale-105 transition-all duration-200"
-              >
-                Download App
-              </Button>
-            </div>
+            
             
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/20">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">10M+</div>
-                <div className="text-blue-200 text-xs">Happy Customers</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">50K+</div>
-                <div className="text-blue-200 text-xs">Driver Partners</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">35+</div>
-                <div className="text-blue-200 text-xs">Districts</div>
-              </div>
-            </div>
+            
           </div>
           
           {/* Right Content - Hero Image */}
           <div className="relative pt-4 lg:pt-8">
             <div className="relative z-10">
               <img
-                src="https://img.freepik.com/free-vector/loaders-carrying-armchair-boxes-new-house_74855-14095.jpg?semt=ais_hybrid&w=740"
+                src="https://ik.imagekit.io/vf1wtj1uk/deliverypartners/dplanding.jpg?updatedAt=1752334980582"
                 alt="Delivery Partner with package"
                 className="w-full max-w-md mx-auto rounded-2xl shadow-2xl"
               />

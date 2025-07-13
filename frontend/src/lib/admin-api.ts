@@ -459,35 +459,6 @@ export const adminReportsApi = {
   createBackup: async () => apiCall('/admin/system/backup', { method: 'POST' }),
 };
 
-// Settings Management API
-export const adminSettingsApi = {
-  // Get all settings
-  getSettings: async () => {
-    return apiCall('/admin/settings');
-  },
-  
-  // Update settings
-  updateSettings: async (settings: any) => {
-    return apiCall('/admin/settings', {
-      method: 'PUT',
-      body: JSON.stringify(settings)
-    });
-  },
-  
-  // Get pricing settings
-  getPricingSettings: async () => {
-    return apiCall('/admin/settings/pricing');
-  },
-  
-  // Update pricing settings
-  updatePricingSettings: async (pricingData: any) => {
-    return apiCall('/admin/settings/pricing', {
-      method: 'PUT',
-      body: JSON.stringify(pricingData)
-    });
-  }
-};
-
 // Analytics API (Legacy - keeping for backward compatibility)
 export const adminAnalyticsApi = {
   // Get booking analytics
@@ -611,7 +582,6 @@ export default {
   transactions: adminTransactionsApi,
   notifications: adminNotificationsApi,
   reports: adminReportsApi,
-  settings: adminSettingsApi,
   analytics: adminAnalyticsApi,
   cities: adminCitiesApi
 };

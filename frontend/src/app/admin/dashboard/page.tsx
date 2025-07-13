@@ -329,119 +329,12 @@ export default function DashboardPage() {
       <Tabs defaultValue="live-trips" className="space-y-4">
         <TabsList>
           <TabsTrigger value="live-trips">Live Trips ({stats.activeTrips.length})</TabsTrigger>
-          <TabsTrigger value="recent-bookings">Recent Bookings</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          
         </TabsList>
         <TabsContent value="live-trips" className="space-y-4">
           <LiveTrips trips={stats.activeTrips} />
         </TabsContent>
-        <TabsContent value="recent-bookings" className="space-y-4">
-          <RecentBookings bookings={stats.recentBookings} />
-        </TabsContent>
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Booking Status Distribution</CardTitle>
-              </CardHeader>
-              <CardContent className="pl-2">
-                <BookingStatusChart />
-              </CardContent>
-            </Card>
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Revenue by Vehicle Type</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>Revenue chart will be displayed here</p>
-                    <p className="text-sm mt-1">Total Revenue: ${stats.totalRevenue.toFixed(2)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Additional analytics cards */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Performance Metrics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Avg. Booking Value</span>
-                    <span className="font-medium">
-                      ${stats.totalBookings > 0 ? (stats.totalRevenue / stats.totalBookings).toFixed(2) : '0.00'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Completion Rate</span>
-                    <span className="font-medium">
-                      {stats.totalBookings > 0 
-                        ? (((stats.totalBookings - stats.pendingBookings) / stats.totalBookings) * 100).toFixed(1)
-                        : '0'
-                      }%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Vehicles per Driver</span>
-                    <span className="font-medium">
-                      {stats.totalDrivers > 0 ? (stats.totalVehicles / stats.totalDrivers).toFixed(1) : '0'}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Today's Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">New Bookings</span>
-                    <span className="font-medium">{stats.todayBookings}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Active Trips</span>
-                    <span className="font-medium">{stats.activeTrips.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Online Drivers</span>
-                    <span className="font-medium">{stats.activeDrivers}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">System Health</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">API Status</span>
-                    <span className="font-medium text-green-600">Online</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Database</span>
-                    <span className="font-medium text-green-600">Connected</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Last Updated</span>
-                    <span className="font-medium text-xs">{new Date().toLocaleTimeString()}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+        
       </Tabs>
     </div>
   )

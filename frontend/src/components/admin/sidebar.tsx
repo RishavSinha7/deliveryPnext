@@ -8,7 +8,6 @@ import {
   CreditCard,
   LayoutDashboard,
   Percent,
-  Settings,
   Users,
   Bell,
   FileText,
@@ -29,7 +28,6 @@ const sidebarItems = [
   { title: "Transactions", href: "/admin/transactions", icon: CreditCard },
   { title: "Notifications", href: "/admin/notifications", icon: Bell },
   { title: "Reports", href: "/admin/reports", icon: FileText },
-  { title: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {

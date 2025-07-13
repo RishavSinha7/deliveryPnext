@@ -19,18 +19,14 @@ const Footer = () => {
               India's largest intra-city logistics platform. Move anything, anywhere within the city at the tap of a button.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-colors">
+              <a href="https://www.facebook.com/deliverypartners01/" className="w-10 h-10 bg-gray-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-colors">
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-blue-400 rounded-lg flex items-center justify-center transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-pink-600 rounded-lg flex items-center justify-center transition-colors">
+              
+              <a href="https://www.instagram.com/deliverypartners2020?igsh=MXJkbXF5MmVnYzI1cw==" className="w-10 h-10 bg-gray-800 hover:bg-pink-600 rounded-lg flex items-center justify-center transition-colors">
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-blue-700 rounded-lg flex items-center justify-center transition-colors">
-                <Linkedin className="h-5 w-5" />
-              </a>
+              
             </div>
           </div>
           
@@ -38,24 +34,17 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-6">Services</h3>
             <ul className="space-y-4">
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">City Trucks</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">City Bikes</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">Packers & Movers</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">For Enterprise</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">Intercity</a></li>
+              <li><a className="text-gray-300 hover:text-white transition-colors font-medium">City Trucks</a></li>
+              <li><a className="text-gray-300 hover:text-white transition-colors font-medium">City Bikes</a></li>
+              <li><a className="text-gray-300 hover:text-white transition-colors font-medium">Packers & Movers</a></li>
+              <li><a className="text-gray-300 hover:text-white transition-colors font-medium">For Enterprise</a></li>
+              <li><a className="text-gray-300 hover:text-white transition-colors font-medium">Intercity</a></li>
             </ul>
           </div>
           
           {/* Company */}
           <div>
-            <h3 className="text-xl font-bold mb-6">Company</h3>
-            <ul className="space-y-4">
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">About Us</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">Careers</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">Press</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">Blog</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">Partner with us</a></li>
-            </ul>
+        
           </div>
           
           {/* Contact */}
@@ -73,11 +62,11 @@ const Footer = () => {
               </div>
               <div className="flex items-center">
                 <Phone className="h-5 w-5 text-blue-500 flex-shrink-0 mr-3" />
-                <span className="text-gray-300 font-medium">+91 7292929292</span>
+                <span className="text-gray-300 font-medium">+91 9905722121</span>
               </div>
               <div className="flex items-center">
                 <Mail className="h-5 w-5 text-blue-500 flex-shrink-0 mr-3" />
-                <span className="text-gray-300 font-medium">support@deliverypartner.in</span>
+                <span className="text-gray-300 font-medium">info@deliverypartners.in</span>
               </div>
             </div>
           </div>
@@ -90,9 +79,9 @@ const Footer = () => {
               &copy; 2023 Delivery Partner. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">Cookie Policy</a>
+              <a className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+              <a className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+              <a className="text-gray-400 hover:text-white transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>

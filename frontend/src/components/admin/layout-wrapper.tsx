@@ -5,65 +5,81 @@ import { usePathname, useRouter } from "next/navigation"
 import { Sidebar } from "@/components/admin/sidebar"
 import { Header } from "@/components/admin/header"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { AdminAuth } from "@/lib/admin-auth"
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const isAuthPage = pathname.startsWith("/admin/login")
+  const isLoginPage = pathname === "/admin/login"
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [adminData, setAdminData] = useState<any>(null)
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // For admin auth, we'll rely on the session cookie set during login
-        // If the user is not authenticated, API calls will fail and redirect
-        setIsAuthenticated(true)
-        setAdminData({ role: 'ADMIN' }) // Fallback admin data
-      } catch (error) {
-        console.error('Auth check failed:', error)
-        if (!isAuthPage) {
-          router.push('/admin/login')
-        }
-      } finally {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
+    const checkAuth = () => {
+      if (isLoginPage) {
         setIsLoading(false)
+        return
       }
-    }
 
-    if (!isAuthPage) {
-      checkAuth()
-    } else {
+      const hasValidAuth = AdminAuth.checkAuth()
+      
+      if (!hasValidAuth) {
+        // Clear any invalid tokens and redirect
+        AdminAuth.removeToken()
+        router.replace('/admin/login')
+        return
+      }
+
+      setIsAuthenticated(true)
       setIsLoading(false)
     }
-  }, [pathname, router, isAuthPage])
 
-  // Show loading spinner while checking auth
-  if (isLoading && !isAuthPage) {
+    checkAuth()
+  }, [pathname, router, isLoginPage])
+
+  // Show loading spinner while checking auth (only for protected pages)
+  if (isLoading && !isLoginPage) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
-      </div>
-    )
-  }
-
-  // Show auth page without layout
-  if (isAuthPage) return <>{children}</>
-
-  // Show admin panel only if authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800">Access Denied</h1>
-          <p className="text-gray-600 mt-2">You don't have permission to access this area.</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Verifying authentication...</p>
         </div>
       </div>
     )
   }
+
+  // Show login page without layout
+  if (isLoginPage) {
+    return <>{children}</>
+  }
+
+  // Show access denied if not authenticated (fallback)
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="text-red-500 text-6xl mb-4">🚫</div>
+          <h1 className="text-3xl font-bold text-red-600 mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-6">You must be logged in as an administrator to access this page.</p>
+          <button 
+            onClick={() => router.push('/admin/login')}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Render admin layout for authenticated users
   return (
-    <div className="admin-panel flex h-screen overflow-hidden">
+    <div className="admin-panel flex h-screen overflow-hidden bg-gray-50">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-64">
         <Sidebar isOpen={true} onClose={() => {}} />
@@ -74,19 +90,22 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
         <SheetContent side="left" className="p-0 w-72">
           <Sidebar isOpen={true} onClose={() => setMobileSidebarOpen(false)} />
         </SheetContent>
-
-        {/* Main layout */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <Header 
-            onMobileMenuClick={() => setMobileSidebarOpen(true)} 
-            adminData={adminData}
-          />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            {/* Pass admin data to children via context or props */}
-            {children}
-          </main>
-        </div>
       </Sheet>
+
+      {/* Main layout */}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header 
+          onMobileMenuClick={() => setMobileSidebarOpen(true)} 
+          adminData={{
+            email: 'admin@deliverypartner.com',
+            fullName: 'System Administrator',
+            role: 'ADMIN'
+          }}
+        />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-white">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

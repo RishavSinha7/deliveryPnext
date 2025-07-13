@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Tabs,
@@ -45,6 +45,14 @@ export default function DriverPanelPage() {
   const [activeTab, setActiveTab] = useState("active-trips");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const handleLogout = useCallback(() => {
+    // Clear auth tokens
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    // Redirect to login page
+    router.push('/auth');
+  }, [router]);
+
   // Show error toast if there's an error
   useEffect(() => {
     if (error) {
@@ -55,6 +63,26 @@ export default function DriverPanelPage() {
       });
     }
   }, [error, toast]);
+
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevent going back to previous page, redirect to login instead
+      event.preventDefault();
+      handleLogout();
+    };
+
+    // Add event listener for browser back button
+    window.addEventListener('popstate', handlePopState);
+
+    // Push a state to prevent immediate back navigation
+    window.history.pushState(null, '', window.location.href);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [handleLogout]);
 
   const navigationItems = [
     { id: "active-trips", label: "Active Trips", icon: Package },
@@ -156,13 +184,18 @@ export default function DriverPanelPage() {
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              {/* Back Button */}
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+              {/* Back/Logout Button */}
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="flex items-center space-x-2"
+                  onClick={handleLogout}
+                >
                   <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Back to Home</span>
+                  <span className="hidden sm:inline">Back to Login</span>
                 </Button>
-              </Link>
+              </div>
 
               {/* Title */}
               <div className="flex-1 text-center">
@@ -192,6 +225,18 @@ export default function DriverPanelPage() {
                       </Button>
                     );
                   })}
+                  
+                  {/* Logout Button in Mobile Menu */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-3 h-4 w-4" />
+                      Logout
+                    </Button>
+                  </div>
                 </nav>
               </SheetContent>
             </Sheet>

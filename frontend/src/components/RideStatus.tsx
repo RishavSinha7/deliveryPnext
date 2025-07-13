@@ -30,7 +30,6 @@ export default function RideStatus() {
   const bookingId = searchParams.get('bookingId');
   const pickup = searchParams.get('pickup') || 'Pickup Location';
   const drop = searchParams.get('drop') || 'Drop Location';
-  const vehicleType = searchParams.get('type') || 'truck';
   const pickupDate = searchParams.get('pickupDate') || '';
   
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
@@ -152,22 +151,6 @@ export default function RideStatus() {
   }
 
   // Vehicle data based on type
-  const truckOptions = [
-    { name: 'Mini 3W', price: '₹430 - ₹460', capacity: '50 Kg', image: '/truck.png' },
-    { name: 'Eeco', price: '₹1205 - ₹1235', capacity: '500 kg', image: '/truck.png' },
-    { name: '3 Wheeler', price: '₹1080 - ₹1110', capacity: '500 kg', image: '/truck.png' },
-    { name: 'Tata Ace', price: '₹1315 - ₹1345', capacity: '750 kg', image: '/truck.png' },
-    { name: 'Pickup 8Ft', price: '₹1635 - ₹1665', capacity: '1250 kg', image: '/truck.png' },
-    { name: 'Tata 1.7t', price: '₹3225 - ₹3255', capacity: '1500 kg', image: '/truck.png' },
-  ];
-
-  const bikeOptions = [
-    { name: '2 Wheeler', price: '₹32.5', capacity: '20 kg', image: '/bike.png' },
-    { name: 'Bike Express', price: '₹45 - ₹55', capacity: '25 kg', image: '/bike.png' },
-    { name: 'Bike Premium', price: '₹65 - ₹75', capacity: '30 kg', image: '/bike.png' },
-  ];
-
-  const currentVehicles = vehicleType === 'bike' ? bikeOptions : truckOptions;
   const currentStatus = bookingData?.status || 'PENDING';
   const statusSteps = getStatusSteps(currentStatus);
 
@@ -202,6 +185,25 @@ export default function RideStatus() {
                       </div>
                     </div>
                     
+                    <div className="flex items-start space-x-3">
+                      <div className="flex flex-col items-center">
+                        <div className="w-0.5 h-12 bg-gray-400"></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <div>
+                        <p className="text-sm text-gray-500">Drop Location</p>
+                        <p className="text-lg font-semibold text-gray-900">{bookingData.dropoffAddress}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Pickup Schedule</h3>
+                  <div className="space-y-4">
                     <div className="flex items-center space-x-3">
                       <Calendar className="w-4 h-4 text-blue-600" />
                       <div>
@@ -219,31 +221,17 @@ export default function RideStatus() {
                       </div>
                     </div>
                     
-                    <div className="flex items-start space-x-3">
-                      <div className="flex flex-col items-center">
-                        <div className="w-0.5 h-12 bg-gray-400"></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    {bookingData.driver && (
                       <div>
-                        <p className="text-sm text-gray-500">Drop Location</p>
-                        <p className="text-lg font-semibold text-gray-900">{bookingData.dropoffAddress}</p>
+                        <h3 className="font-semibold text-lg mb-2 mt-6">Driver Details</h3>
+                        <div className="space-y-2">
+                          <p><span className="font-medium">Name:</span> {bookingData.driver.user.fullName}</p>
+                          <p><span className="font-medium">Phone:</span> {bookingData.driver.user.phoneNumber}</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
-                
-                {bookingData.driver && (
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Driver Details</h3>
-                    <div className="space-y-2">
-                      <p><span className="font-medium">Name:</span> {bookingData.driver.user.fullName}</p>
-                      <p><span className="font-medium">Phone:</span> {bookingData.driver.user.phoneNumber}</p>
-                    </div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -305,9 +293,8 @@ export default function RideStatus() {
           </Card>
         )}
 
-        {/* Status Steps and Vehicle Selection - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Status Steps */}
+        {/* Status Steps */}
+        <div className="mb-8">
           <Card className="shadow-xl border-0">
             <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-t-lg">
               <CardTitle className="flex items-center text-xl">
@@ -384,45 +371,6 @@ export default function RideStatus() {
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Refresh Status
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Vehicle Selection Card */}
-          <Card className="shadow-xl border-0">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-t-lg">
-              <CardTitle className="flex items-center text-xl">
-                <MapPin className="mr-2 h-5 w-5" />
-                Vehicle Selection
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm text-gray-500">Selected Vehicle Type</p>
-                    <p className="text-lg font-semibold text-gray-900">{vehicleType === 'bike' ? 'Bike' : 'Truck'}</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  {currentVehicles.map((vehicle) => (
-                    <div key={vehicle.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm">
-                      <div className="flex items-center space-x-4">
-                        <img src={vehicle.image} alt={vehicle.name} className="w-16 h-16 object-cover rounded-md" />
-                        <div>
-                          <p className="text-md font-semibold text-gray-900">{vehicle.name}</p>
-                          <p className="text-sm text-gray-500">Capacity: {vehicle.capacity}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">{vehicle.price}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             </CardContent>
           </Card>

@@ -364,7 +364,7 @@ export default function BookingsPage() {
                           <span className="sr-only">Actions</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg backdrop-blur-none opacity-100 z-50">
                         <DropdownMenuItem onClick={() => setSelectedBookingForDetails(booking)}>
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
