@@ -4,6 +4,7 @@ import { createSuccessResponse, createErrorResponse } from '../utils/helpers';
 import prisma from '../config/database';
 import logger from '../utils/logger';
 import bcrypt from 'bcryptjs';
+import { emailService } from '../services/emailService';
 
 class BookingController {
   // Create a new booking
@@ -29,7 +30,9 @@ class BookingController {
         paymentMethod = 'CASH',
         customerName,
         customerPhone,
-        customerType
+        customerType,
+        vehicleType,
+        vehicleName
       } = req.body;
 
       // Add validation and logging
@@ -68,6 +71,9 @@ class BookingController {
           estimatedFare: parseFloat(estimatedFare) || 0,
           notes,
           paymentMethod,
+          // @ts-ignore - New fields from migration, Prisma client will be regenerated
+          vehicleType: vehicleType || null,
+          vehicleName: vehicleName || null,
           status: 'PENDING'
         },
         include: {
@@ -75,7 +81,8 @@ class BookingController {
             select: {
               id: true,
               fullName: true,
-              phoneNumber: true
+              phoneNumber: true,
+              email: true
             }
           }
         }
@@ -104,6 +111,34 @@ class BookingController {
             isRead: false
           }
         });
+      }
+
+      // 📧 Send email notification to admin
+      try {
+        const emailData = {
+          bookingId: booking.id,
+          bookingNumber: booking.bookingNumber,
+          customerName: booking.customer?.fullName || customerName || 'N/A',
+          customerEmail: booking.customer?.email || 'N/A',
+          customerPhone: booking.customer?.phoneNumber || customerPhone || 'N/A',
+          serviceType: booking.serviceType,
+          vehicleName: booking.vehicleName || null,
+          pickupAddress: booking.pickupAddress,
+          dropoffAddress: booking.dropoffAddress,
+          pickupDateTime: booking.pickupDateTime.toISOString(),
+          estimatedFare: booking.estimatedFare,
+          status: booking.status,
+        };
+
+        const emailResult = await emailService.sendBookingNotificationToAdmin(emailData);
+        if (emailResult.success) {
+          logger.info(`✅ Admin email notification sent for booking: ${booking.bookingNumber}`);
+        } else {
+          logger.error(`❌ Failed to send admin email for booking: ${booking.bookingNumber}`, emailResult.error);
+        }
+      } catch (emailError) {
+        logger.error('❌ Email notification error:', emailError);
+        // Don't fail the booking creation if email fails
       }
 
       logger.info(`New booking created: ${booking.bookingNumber}`);
@@ -1421,6 +1456,33 @@ class BookingController {
       logger.error('Error updating trip status by driver:', error);
       return res.status(500).json(
         createErrorResponse('Internal server error')
+      );
+    }
+  }
+
+  // Test email notification endpoint
+  async testEmailNotification(req: AuthRequest, res: Response): Promise<Response | void> {
+    try {
+      // Test email connection
+      const isConnected = await emailService.testEmailConnection();
+      
+      if (!isConnected) {
+        return res.status(500).json(
+          createErrorResponse('Email service connection failed')
+        );
+      }
+
+      // Send test booking email
+      const result = await emailService.sendTestEmail();
+
+      res.status(200).json(
+        createSuccessResponse('Test email sent successfully', result)
+      );
+
+    } catch (error: any) {
+      logger.error('Email test error:', error);
+      res.status(500).json(
+        createErrorResponse('Email test failed', error?.message)
       );
     }
   }

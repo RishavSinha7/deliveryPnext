@@ -33,6 +33,9 @@ router.put('/admin/status', authorize('ADMIN', 'SUPER_ADMIN'), bookingController
 // Driver routes for trip status updates
 router.put('/:id/driver-status', authorize('DRIVER'), bookingController.updateTripStatusByDriver);
 
+// Test email route (Admin only)
+router.post('/test-email', authorize('ADMIN', 'SUPER_ADMIN'), bookingController.testEmailNotification);
+
 // Legacy admin routes (keeping for backward compatibility)
 router.get('/', authorize('ADMIN', 'SUPER_ADMIN'), bookingController.getAllBookings);
 router.put('/:id/assign-driver', authorize('ADMIN', 'SUPER_ADMIN'), bookingController.assignDriver);

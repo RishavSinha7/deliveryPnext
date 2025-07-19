@@ -58,11 +58,6 @@ const FeaturesSection = () => {
       title: "Packers & Movers",
       icon: Package,
       link: "estimate/packers-movers"
-    },
-    {
-      title: "Intercity Courier Service",
-      icon: User,
-      link: "estimate/intercity"
     }
   ];
 
@@ -84,12 +79,6 @@ const FeaturesSection = () => {
       icon: "📦",
       description: "Complete relocation services",
       link: "/estimate/packers-movers"
-    },
-    {
-      title: "Intercity Courier Service",
-      icon: "🚚",
-      description: "Inter-city delivery solutions",
-      link: "/estimate/intercity"
     }
   ];
 
@@ -111,7 +100,7 @@ const FeaturesSection = () => {
       </div>
 
       {/* Center card */}
-      <div className="relative z-20 bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md w-full">
+      <div className="relative z-20 bg-white rounded-2xl shadow-2xl p-6 mx-4 max-w-sm w-full">
         {/* City selector */}
         <button 
           onClick={() => setIsCityModalOpen(true)}
@@ -125,14 +114,14 @@ const FeaturesSection = () => {
         </button>
 
         {/* Services grid */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           {services.map((service, index) => {
             const IconComponent = service.icon;
             return (
               <button
                 key={index}
                 onClick={() => window.location.href = service.link}
-                className="flex flex-col items-center p-4 rounded-xl hover:bg-gray-50 transition-colors duration-200 group"
+                className="flex flex-col items-center p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200 group"
               >
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-2 group-hover:bg-blue-200 transition-colors">
                   <IconComponent className="h-6 w-6 text-blue-600" />

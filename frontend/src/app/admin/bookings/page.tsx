@@ -26,6 +26,8 @@ interface Booking {
   actualFare?: number
   paymentMethod: string
   paymentStatus: string
+  vehicleName?: string
+  vehicleType?: string
   createdAt: string
   customer: {
     fullName: string
@@ -314,6 +316,7 @@ export default function BookingsPage() {
                 <TableHead>Booking ID</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Driver</TableHead>
+                <TableHead>Vehicle</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
@@ -344,6 +347,22 @@ export default function BookingsPage() {
                           </Select>
                         )}
                       </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {booking.vehicleName ? (
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">{booking.vehicleName}</span>
+                        <span className="text-xs text-gray-500 capitalize">
+                          {booking.serviceType?.replace('_', ' ').toLowerCase() || 'N/A'}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-500 text-sm">
+                        {booking.serviceType === 'BIKE_DELIVERY' ? '2 Wheeler' : 
+                         booking.serviceType === 'TRUCK_DELIVERY' ? 'Truck' : 
+                         booking.serviceType === 'PACKERS_MOVERS' ? 'Packers & Movers' : 'N/A'}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>{new Date(booking.pickupDateTime).toLocaleString('en-US', {

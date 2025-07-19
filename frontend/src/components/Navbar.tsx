@@ -36,12 +36,12 @@ const Navbar = () => {
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="flex items-center space-x-3">
                 <img
-                  src="https://ik.imagekit.io/vf1wtj1uk/deliverypartners/Screenshot%202025-07-12%20215018.png?updatedAt=1752337262420"
+                  src="https://ik.imagekit.io/vf1wtj1uk/deliverypartners/Screenshot_2025-07-19_234547-removebg-preview.png?updatedAt=1752949895120"
                   alt="Logo"
                   className="w-12 h-10 rounded-xl object-cover"
                 />
-                <span className="text-2xl font-bold" style={{color: '#1e9fb9'}}>
-                  Delivery Partners
+                <span className="text-2xl font-bold" style={{color: '#1ca1da'}}>
+                  Delivery Partners®
                 </span>
               </Link>
             </div>

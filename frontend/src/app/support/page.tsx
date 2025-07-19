@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { ContactForm } from "@/components/ContactForm";
 
 const SupportPage = () => {
 
@@ -89,6 +90,17 @@ const SupportPage = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Contact Form Section */}
+        <div className="mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Send Us a Message</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Can't find what you're looking for? Send us a detailed message and our support team will get back to you promptly.
+            </p>
+          </div>
+          <ContactForm />
         </div>
 
         <div className="grid lg:grid-cols-1 gap-12">

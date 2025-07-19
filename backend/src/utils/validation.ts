@@ -235,7 +235,7 @@ export const updateVehicleSchema = Joi.object({
 // Booking validation schemas
 export const createBookingSchema = Joi.object({
   serviceType: Joi.string()
-    .valid('BIKE_DELIVERY', 'AUTO_RIDE', 'CAR_RIDE', 'TRUCK_DELIVERY', 'PACKERS_MOVERS', 'INTERCITY')
+    .valid('BIKE_DELIVERY', 'AUTO_RIDE', 'CAR_RIDE', 'TRUCK_DELIVERY', 'PACKERS_MOVERS')
     .required()
     .messages({
       'any.only': 'Service type must be one of the supported services',

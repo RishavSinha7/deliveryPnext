@@ -142,7 +142,7 @@ export interface UpdateBookingRequest {
 
 export type UserRole = 'CUSTOMER' | 'DRIVER' | 'ADMIN' | 'SUPER_ADMIN';
 export type VehicleType = 'BIKE' | 'AUTO' | 'CAR' | 'TRUCK' | 'VAN' | 'TEMPO';
-export type ServiceType = 'BIKE_DELIVERY' | 'AUTO_RIDE' | 'CAR_RIDE' | 'TRUCK_DELIVERY' | 'PACKERS_MOVERS' | 'INTERCITY';
+export type ServiceType = 'BIKE_DELIVERY' | 'AUTO_RIDE' | 'CAR_RIDE' | 'TRUCK_DELIVERY' | 'PACKERS_MOVERS';
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'DRIVER_ASSIGNED' | 'DRIVER_ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
 export type PaymentMethod = 'CASH' | 'CARD' | 'UPI' | 'WALLET' | 'NET_BANKING';
 export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';

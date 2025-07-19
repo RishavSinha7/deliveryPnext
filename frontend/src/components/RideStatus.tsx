@@ -16,6 +16,8 @@ interface BookingData {
   dropoffAddress: string;
   estimatedFare: number;
   pickupDateTime: string;
+  vehicleName?: string;
+  vehicleType?: string;
   driver?: {
     user: {
       fullName: string;
@@ -31,6 +33,10 @@ export default function RideStatus() {
   const pickup = searchParams.get('pickup') || 'Pickup Location';
   const drop = searchParams.get('drop') || 'Drop Location';
   const pickupDate = searchParams.get('pickupDate') || '';
+  const vehicleName = searchParams.get('vehicleName') || '';
+  const vehicleType = searchParams.get('vehicleType') || '';
+  const vehiclePrice = searchParams.get('vehiclePrice') || '';
+  const vehicleCapacity = searchParams.get('vehicleCapacity') || '';
   
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -221,6 +227,36 @@ export default function RideStatus() {
                       </div>
                     </div>
                     
+                    {/* Vehicle Information Section */}
+                    {(vehicleName || bookingData?.vehicleName) && (
+                      <div className="mt-6">
+                        <h3 className="font-semibold text-lg mb-2">Vehicle Details</h3>
+                        <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <div>
+                              <p className="text-sm text-gray-500">Selected Vehicle</p>
+                              <p className="text-lg font-semibold text-gray-900">
+                                {vehicleName || bookingData?.vehicleName || 'Vehicle Info Not Available'}
+                              </p>
+                            </div>
+                          </div>
+                          {vehiclePrice && (
+                            <div className="flex justify-between items-center pt-2">
+                              <span className="text-sm text-gray-600">Price:</span>
+                              <span className="font-semibold text-blue-600">{vehiclePrice}</span>
+                            </div>
+                          )}
+                          {vehicleCapacity && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Capacity:</span>
+                              <span className="font-semibold text-gray-700">{vehicleCapacity}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
                     {bookingData.driver && (
                       <div>
                         <h3 className="font-semibold text-lg mb-2 mt-6">Driver Details</h3>
@@ -288,6 +324,33 @@ export default function RideStatus() {
                     <p className="text-lg font-semibold text-gray-900">{drop}</p>
                   </div>
                 </div>
+                
+                {/* Vehicle Information in fallback card */}
+                {vehicleName && (
+                  <div className="mt-6">
+                    <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <div>
+                          <p className="text-sm text-gray-500">Selected Vehicle</p>
+                          <p className="text-lg font-semibold text-gray-900">{vehicleName}</p>
+                        </div>
+                      </div>
+                      {vehiclePrice && (
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-sm text-gray-600">Price:</span>
+                          <span className="font-semibold text-blue-600">{vehiclePrice}</span>
+                        </div>
+                      )}
+                      {vehicleCapacity && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Capacity:</span>
+                          <span className="font-semibold text-gray-700">{vehicleCapacity}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
