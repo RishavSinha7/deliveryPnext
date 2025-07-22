@@ -306,14 +306,25 @@ class VehicleController {
         );
       }
 
-      // Find the vehicle
-      const vehicle = await prisma.vehicle.findUnique({ where: { id } });
+      // Find the vehicle with driver profile and user
+      const vehicle = await prisma.vehicle.findUnique({ 
+        where: { id },
+        include: {
+          driverProfile: {
+            include: {
+              user: true
+            }
+          }
+        }
+      });
+      
       if (!vehicle) {
         return res.status(404).json(
           createErrorResponse('Vehicle not found')
         );
       }
 
+      // Update vehicle verification status
       const updatedVehicle = await prisma.vehicle.update({
         where: { id },
         data: { 
@@ -322,10 +333,30 @@ class VehicleController {
         }
       });
 
+      // Update driver status to ACTIVE when vehicle is verified
+      if (vehicle.driverProfile) {
+        await prisma.user.update({
+          where: { id: vehicle.driverProfile.userId },
+          data: {
+            isActive: true
+          }
+        });
+
+        // Also update driver profile verification status
+        await prisma.driverProfile.update({
+          where: { id: vehicle.driverProfile.id },
+          data: {
+            isVerified: true
+          }
+        });
+
+        logger.info(`Driver status updated to ACTIVE for user ${vehicle.driverProfile.userId} after vehicle verification`);
+      }
+
       logger.info(`Vehicle verified: ${updatedVehicle.vehicleNumber} by admin`);
 
       res.status(200).json(
-        createSuccessResponse('Vehicle verified successfully', updatedVehicle)
+        createSuccessResponse('Vehicle verified successfully and driver activated', updatedVehicle)
       );
     } catch (error) {
       logger.error('Verify vehicle error:', error);

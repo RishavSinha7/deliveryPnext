@@ -221,7 +221,7 @@ export default function ReportsPage() {
                       <TableCell>{item.total}</TableCell>
                       <TableCell>{item.completed}</TableCell>
                       <TableCell>{item.cancelled}</TableCell>
-                      <TableCell>${item.revenue?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>₹{item.revenue?.toFixed(2) || '0.00'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -243,10 +243,10 @@ export default function ReportsPage() {
                   {reportData.earnings.map((item: any, index: number) => (
                     <TableRow key={index}>
                       <TableCell>{item.date}</TableCell>
-                      <TableCell>${item.gross?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell>${item.commission?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell>${item.driverPayouts?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell>${item.net?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>₹{item.gross?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>₹{item.commission?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>₹{item.driverPayouts?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>₹{item.net?.toFixed(2) || '0.00'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -271,7 +271,7 @@ export default function ReportsPage() {
                       <TableCell>{driver.totalTrips}</TableCell>
                       <TableCell>{driver.completedTrips}</TableCell>
                       <TableCell>{driver.rating?.toFixed(1) || 'N/A'}</TableCell>
-                      <TableCell>${driver.earnings?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>₹{driver.earnings?.toFixed(2) || '0.00'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

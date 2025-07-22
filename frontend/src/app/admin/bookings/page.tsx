@@ -373,7 +373,7 @@ export default function BookingsPage() {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}</TableCell>
-                  <TableCell>${(booking.actualFare || booking.estimatedFare).toFixed(2)}</TableCell>
+                  <TableCell>₹{(booking.actualFare || booking.estimatedFare).toFixed(2)}</TableCell>
                   <TableCell>{getStatusBadge(booking.status)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -502,12 +502,12 @@ export default function BookingsPage() {
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-gray-500">Estimated Fare</p>
-                      <p className="font-medium">${selectedBookingForDetails.estimatedFare.toFixed(2)}</p>
+                      <p className="font-medium">₹{selectedBookingForDetails.estimatedFare.toFixed(2)}</p>
                     </div>
                     {selectedBookingForDetails.actualFare && (
                       <div>
                         <p className="text-sm text-gray-500">Actual Fare</p>
-                        <p className="font-medium">${selectedBookingForDetails.actualFare.toFixed(2)}</p>
+                        <p className="font-medium">₹{selectedBookingForDetails.actualFare.toFixed(2)}</p>
                       </div>
                     )}
                     <div>

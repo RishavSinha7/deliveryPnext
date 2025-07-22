@@ -44,7 +44,7 @@ const HeroSection = () => {
           <div className="relative pt-4 lg:pt-8">
             <div className="relative z-10">
               <img
-                src="https://ik.imagekit.io/vf1wtj1uk/deliverypartners/dplanding.jpg?updatedAt=1752334980582"
+                src="https://img.freepik.com/free-vector/loaders-carrying-armchair-boxes-new-house_74855-14095.jpg?semt=ais_hybrid&w=740"
                 alt="Delivery Partner with package"
                 className="w-full max-w-md mx-auto rounded-2xl shadow-2xl"
               />

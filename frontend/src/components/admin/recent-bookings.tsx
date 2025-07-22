@@ -15,7 +15,7 @@ export function RecentBookings({ bookings: propBookings }: RecentBookingsProps) 
       customer: "John Smith",
       driver: "David Johnson",
       date: "2023-05-21",
-      amount: "$45.00",
+      amount: "₹45.00",
       status: "completed",
     },
     {
@@ -23,7 +23,7 @@ export function RecentBookings({ bookings: propBookings }: RecentBookingsProps) 
       customer: "Sarah Williams",
       driver: "Michael Brown",
       date: "2023-05-21",
-      amount: "$32.50",
+      amount: "₹32.50",
       status: "completed",
     },
     {
@@ -31,7 +31,7 @@ export function RecentBookings({ bookings: propBookings }: RecentBookingsProps) 
       customer: "Robert Davis",
       driver: "James Wilson",
       date: "2023-05-21",
-      amount: "$28.75",
+      amount: "₹28.75",
       status: "in-progress",
     },
     {
@@ -39,7 +39,7 @@ export function RecentBookings({ bookings: propBookings }: RecentBookingsProps) 
       customer: "Jennifer Miller",
       driver: "Pending Assignment",
       date: "2023-05-22",
-      amount: "$52.25",
+      amount: "₹52.25",
       status: "pending",
     },
     {
@@ -47,7 +47,7 @@ export function RecentBookings({ bookings: propBookings }: RecentBookingsProps) 
       customer: "Michael Garcia",
       driver: "Pending Assignment",
       date: "2023-05-22",
-      amount: "$38.00",
+      amount: "₹38.00",
       status: "pending",
     },
   ]

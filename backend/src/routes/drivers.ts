@@ -12,6 +12,7 @@ router.use(authenticate);
 router.get('/profile', authorize('DRIVER'), driverController.getProfile);
 router.put('/profile', authorize('DRIVER'), driverController.updateProfile);
 router.put('/status', authorize('DRIVER'), driverController.updateOnlineStatus);
+router.put('/location', authorize('DRIVER'), driverController.updateLocation);
 router.get('/earnings', authorize('DRIVER'), driverController.getEarnings);
 router.get('/trips', authorize('DRIVER'), driverController.getTrips);
 

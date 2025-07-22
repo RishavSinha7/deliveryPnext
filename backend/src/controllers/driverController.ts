@@ -312,11 +312,101 @@ class DriverController {
   // Update driver status (Admin)
   async updateDriverStatus(req: AuthRequest, res: Response): Promise<Response | void> {
     try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(401).json(
+          createErrorResponse('Unauthorized: Admin access required')
+        );
+      }
+
+      if (!id) {
+        return res.status(400).json(
+          createErrorResponse('Driver ID is required')
+        );
+      }
+
+      // Update user status
+      const updatedUser = await prisma.user.update({
+        where: { id: id },
+        data: { isActive },
+        include: {
+          driverProfile: true
+        }
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json(
+          createErrorResponse('Driver not found')
+        );
+      }
+
       res.status(200).json(
-        createSuccessResponse('Update driver status functionality not yet implemented')
+        createSuccessResponse('Driver status updated successfully', {
+          userId: updatedUser.id,
+          isActive: updatedUser.isActive,
+          driverProfile: updatedUser.driverProfile
+        })
       );
     } catch (error) {
       logger.error('Update driver status error:', error);
+      res.status(500).json(
+        createErrorResponse('Internal server error')
+      );
+    }
+  }
+
+  // Update driver real-time location
+  async updateLocation(req: AuthRequest, res: Response): Promise<Response | void> {
+    try {
+      if (!req.user) {
+        return res.status(401).json(
+          createErrorResponse('Authentication required')
+        );
+      }
+
+      const { latitude, longitude, address } = req.body;
+
+      if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+        return res.status(400).json(
+          createErrorResponse('Latitude and longitude are required and must be numbers')
+        );
+      }
+
+      // Get driver profile
+      const driverProfile = await prisma.driverProfile.findUnique({
+        where: { userId: req.user.userId }
+      });
+
+      if (!driverProfile) {
+        return res.status(404).json(
+          createErrorResponse('Driver profile not found')
+        );
+      }
+
+      // Update driver location
+      const updatedDriverProfile = await prisma.driverProfile.update({
+        where: { id: driverProfile.id },
+        data: {
+          currentLatitude: latitude,
+          currentLongitude: longitude,
+          currentAddress: address,
+          lastLocationUpdate: new Date()
+        }
+      });
+
+      logger.info(`Driver location updated for driver: ${req.user.userId}`);
+      res.status(200).json(
+        createSuccessResponse('Location updated successfully', {
+          latitude: updatedDriverProfile.currentLatitude,
+          longitude: updatedDriverProfile.currentLongitude,
+          address: updatedDriverProfile.currentAddress,
+          lastUpdate: updatedDriverProfile.lastLocationUpdate
+        })
+      );
+    } catch (error) {
+      logger.error('Update driver location error:', error);
       res.status(500).json(
         createErrorResponse('Internal server error')
       );

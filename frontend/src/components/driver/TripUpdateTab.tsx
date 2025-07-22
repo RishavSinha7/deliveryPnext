@@ -192,10 +192,32 @@ export const TripUpdateTab = ({ activeTrips, onUpdateLocation }: TripUpdateTabPr
       for (const trip of activeTripsInProgress) {
         await onUpdateLocation(trip.bookingId, data.latitude, data.longitude);
       }
+
+      // Also send location update to admin dashboard via driver location API
+      try {
+        const response = await fetch('/api/drivers/location', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({
+            latitude: data.latitude,
+            longitude: data.longitude,
+            address: data.address
+          })
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to update driver location for admin dashboard');
+        }
+      } catch (locationError) {
+        console.warn('Error updating driver location for admin:', locationError);
+      }
     
       toast({
         title: "Location Updated",
-        description: `Your location has been updated for ${activeTripsInProgress.length} active trip(s)`,
+        description: `Your location has been updated for ${activeTripsInProgress.length} active trip(s) and sent to admin dashboard`,
       });
     
       // Reset only the notes field, keep location data

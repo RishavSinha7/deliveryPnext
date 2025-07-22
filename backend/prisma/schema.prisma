@@ -66,6 +66,10 @@ model DriverProfile {
   licenseDocument String?
   aadhaarDocument String?
   profilePhoto    String?
+  currentLatitude Float?
+  currentLongitude Float?
+  currentAddress  String?
+  lastLocationUpdate DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   driverBookings  Booking[]

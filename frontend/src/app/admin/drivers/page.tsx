@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -33,7 +34,6 @@ interface Driver {
   }
   licenseNumber: string
   isVerified: boolean
-  isActive: boolean
   isOnline: boolean
   rating?: number
   totalTrips: number
@@ -52,6 +52,7 @@ export default function DriversPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [verificationFilter, setVerificationFilter] = useState("all")
   const { toast } = useToast()
+  const router = useRouter()
 
   // Fetch drivers data
   useEffect(() => {
@@ -95,8 +96,8 @@ export default function DriversPage() {
       driver.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === "all" || 
-      (statusFilter === 'active' && driver.isActive && driver.user.isActive) ||
-      (statusFilter === 'inactive' && (!driver.isActive || !driver.user.isActive)) ||
+      (statusFilter === 'active' && driver.isVerified && driver.user.isActive) ||
+      (statusFilter === 'inactive' && (!driver.isVerified || !driver.user.isActive)) ||
       (statusFilter === 'online' && driver.isOnline) ||
       (statusFilter === 'offline' && !driver.isOnline)
     
@@ -113,12 +114,8 @@ export default function DriversPage() {
   const getStatusBadge = (driver: Driver) => {
     if (!driver.isVerified) {
       return <Badge className="bg-yellow-500">Pending Verification</Badge>
-    } else if (!driver.isActive || !driver.user.isActive) {
-      return <Badge variant="outline">Inactive</Badge>
-    } else if (driver.isOnline) {
-      return <Badge className="bg-green-500">Online</Badge>
     } else {
-      return <Badge variant="secondary">Offline</Badge>
+      return <Badge className="bg-green-500">Active</Badge>
     }
   }
 
@@ -320,7 +317,7 @@ export default function DriversPage() {
                       <TableCell>{driver.licenseNumber}</TableCell>
                       <TableCell>{driver.rating ? driver.rating.toFixed(1) : 'N/A'}</TableCell>
                       <TableCell>{driver.totalTrips}</TableCell>
-                      <TableCell>${driver.totalEarnings.toFixed(2)}</TableCell>
+                      <TableCell>₹{driver.totalEarnings.toFixed(2)}</TableCell>
                       <TableCell>{getStatusBadge(driver)}</TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -329,26 +326,20 @@ export default function DriversPage() {
                               Actions
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg">
                             <DropdownMenuItem onClick={() => handleEditDriver(driver)}>
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.open(`tel:${driver.user.phoneNumber}`, '_self')}>
                               <Phone className="mr-2 h-4 w-4" />
                               Contact Driver
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push('/admin/vehicles')}>
                               <Car className="mr-2 h-4 w-4" />
                               View Vehicles
                             </DropdownMenuItem>
-                            {driver.isVerified && (
-                              <DropdownMenuItem 
-                                onClick={() => handleToggleDriverStatus(driver.id, driver.isActive)}
-                              >
-                                {driver.isActive ? 'Deactivate' : 'Activate'} Driver
-                              </DropdownMenuItem>
-                            )}
+                           
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -451,7 +442,7 @@ export default function DriversPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label>Total Earnings</Label>
-                  <Input value={`$${selectedDriver.totalEarnings.toFixed(2)}`} readOnly />
+                  <Input value={`₹${selectedDriver.totalEarnings.toFixed(2)}`} readOnly />
                 </div>
               </div>
             </div>

@@ -646,6 +646,17 @@ class BookingController {
           endLongitude: longitude
         }
       });
+
+      // Also update driver's current location for real-time tracking
+      await prisma.driverProfile.update({
+        where: { id: driverProfile.id },
+        data: {
+          currentLatitude: latitude,
+          currentLongitude: longitude,
+          lastLocationUpdate: new Date()
+        }
+      });
+
       logger.info(`Trip location updated for booking: ${booking.bookingNumber} by driver ${req.user.userId}`);
       res.status(200).json(
         createSuccessResponse('Trip location updated successfully', updatedTrip)
@@ -855,6 +866,10 @@ class BookingController {
             driver: {
               select: {
                 id: true,
+                currentLatitude: true,
+                currentLongitude: true,
+                currentAddress: true,
+                lastLocationUpdate: true,
                 user: {
                   select: {
                     fullName: true,

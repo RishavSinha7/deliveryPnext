@@ -172,7 +172,7 @@ export default function TransactionsPage() {
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{totalRevenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">From {filteredTransactions.length} transactions</p>
           </CardContent>
         </Card>
@@ -181,7 +181,7 @@ export default function TransactionsPage() {
             <CardTitle className="text-sm font-medium">Platform Commission</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalCommission.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{totalCommission.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Platform earnings</p>
           </CardContent>
         </Card>
@@ -190,7 +190,7 @@ export default function TransactionsPage() {
             <CardTitle className="text-sm font-medium">Driver Payouts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalDriverPayouts.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{totalDriverPayouts.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Paid to drivers</p>
           </CardContent>
         </Card>
@@ -298,9 +298,9 @@ export default function TransactionsPage() {
                     <TableCell>{transaction.bookingNumber}</TableCell>
                     <TableCell>{transaction.customerName}</TableCell>
                     <TableCell>{transaction.driverName || 'N/A'}</TableCell>
-                    <TableCell>${transaction.amount.toFixed(2)}</TableCell>
-                    <TableCell>${transaction.commission.toFixed(2)}</TableCell>
-                    <TableCell>${(transaction.driverAmount || 0).toFixed(2)}</TableCell>
+                    <TableCell>₹{transaction.amount.toFixed(2)}</TableCell>
+                    <TableCell>₹{transaction.commission.toFixed(2)}</TableCell>
+                    <TableCell>₹{(transaction.driverAmount || 0).toFixed(2)}</TableCell>
                     <TableCell className="capitalize">{transaction.paymentMethod.toLowerCase()}</TableCell>
                     <TableCell>{getStatusBadge(transaction.paymentStatus)}</TableCell>
                     <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>

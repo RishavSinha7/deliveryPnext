@@ -18,7 +18,7 @@ const SupportPage = () => {
       icon: Phone,
       title: "Phone Support",
       description: "Call us for immediate assistance",
-      contact: "+91-1800-123-4567",
+      contact: "+91-9905722121",
       availability: "24/7 Available",
       color: "bg-green-100 text-green-600"
     },
@@ -26,7 +26,7 @@ const SupportPage = () => {
       icon: Mail,
       title: "Email Support",
       description: "Send us your queries via email",
-      contact: "support@deliverypartner.com",
+      contact: "info@deliverypartners.in",
       availability: "Response within 4 hours",
       color: "bg-blue-100 text-blue-600"
     },
