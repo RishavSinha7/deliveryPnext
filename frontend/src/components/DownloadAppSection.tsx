@@ -35,7 +35,7 @@ const DownloadAppSection = () => {
       setError(null)
       
       // Make a public API call to get active coupons (without authentication)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/coupons/public`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL}/coupons/public`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch coupons')

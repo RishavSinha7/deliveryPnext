@@ -41,7 +41,7 @@ export function Header({ onMobileMenuClick, adminData }: HeaderProps) {
   // Fetch notifications
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/notifications`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL}/notifications`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken') || localStorage.getItem('authToken')}`
         }

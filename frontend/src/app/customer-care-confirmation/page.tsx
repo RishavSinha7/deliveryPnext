@@ -1,13 +1,14 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { CheckCircle, Phone, Clock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 
-export default function CustomerCareConfirmationPage() {
+// Create a separate component that uses useSearchParams
+function CustomerCareContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [customerData, setCustomerData] = useState({
@@ -197,5 +198,46 @@ export default function CustomerCareConfirmationPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function LoadingCustomerCare() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="max-w-2xl w-full">
+        <Card className="shadow-2xl border-0 overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center py-8">
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-12 h-12 text-white" />
+              </div>
+            </div>
+            <CardTitle className="text-3xl font-bold mb-2">
+              Loading...
+            </CardTitle>
+            <p className="text-green-100 text-lg">
+              Please wait while we load your confirmation details
+            </p>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// Main exported component with Suspense wrapper
+export default function CustomerCareConfirmationPage() {
+  return (
+    <Suspense fallback={<LoadingCustomerCare />}>
+      <CustomerCareContent />
+    </Suspense>
   );
 }

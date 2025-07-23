@@ -36,7 +36,7 @@ const Login: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL;
       console.log('Admin login: Attempting login for:', data.email);
       console.log('API URL:', API_URL);
       console.log('Full login URL:', `${API_URL}/auth/login`);

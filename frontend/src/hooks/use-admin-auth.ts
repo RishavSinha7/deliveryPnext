@@ -34,7 +34,7 @@ export function useAdminAuth() {
         }
 
         // Verify token with backend
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/verify`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL}/auth/verify`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${adminToken || authToken}`,

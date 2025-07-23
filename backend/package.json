@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Backend API for Delivery Partner platform",
   "main": "dist/server.js",
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules src/server.ts",
     "build": "tsc",

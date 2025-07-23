@@ -93,7 +93,7 @@ export const ContactForm = () => {
     });
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/support/submit`, {
         method: 'POST',
         headers: {

@@ -92,7 +92,7 @@ export default function BookingsPage() {
   // Fetch drivers for assignment dropdown
   const fetchDrivers = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/admin/drivers`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL}/admin/drivers`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken') || localStorage.getItem('authToken')}`
         }

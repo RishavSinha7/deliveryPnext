@@ -97,7 +97,7 @@ export const ActiveTripsTab = ({ trips }: ActiveTripsTabProps): JSX.Element => {
     
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/bookings/${bookingId}/driver-status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL}/bookings/${bookingId}/driver-status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

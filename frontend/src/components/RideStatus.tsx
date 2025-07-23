@@ -47,7 +47,7 @@ export default function RideStatus() {
     if (!bookingId) return;
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/bookings/${bookingId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL}/bookings/${bookingId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }

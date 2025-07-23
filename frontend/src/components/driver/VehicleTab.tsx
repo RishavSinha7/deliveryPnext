@@ -89,7 +89,7 @@ export const VehicleTab = ({ vehicles, onRefresh, onAddVehicle }: VehicleTabProp
 
       try {
         // Check driver profile
-        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/drivers/profile`, {
+        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL}/drivers/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -170,7 +170,7 @@ export const VehicleTab = ({ vehicles, onRefresh, onAddVehicle }: VehicleTabProp
       
       // Check if user is a driver by making a quick profile check
       try {
-        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/drivers/profile`, {
+        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL}/drivers/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

@@ -1,6 +1,6 @@
 // Admin API Layer for backend integration
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_API_URL;
 
 // Helper function to get auth headers
 function getAuthHeaders() {
@@ -459,6 +459,35 @@ export const adminReportsApi = {
   createBackup: async () => apiCall('/admin/system/backup', { method: 'POST' }),
 };
 
+// Settings Management API
+export const adminSettingsApi = {
+  // Get all settings
+  getSettings: async () => {
+    return apiCall('/admin/settings');
+  },
+  
+  // Update settings
+  updateSettings: async (settings: any) => {
+    return apiCall('/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    });
+  },
+  
+  // Get pricing settings
+  getPricingSettings: async () => {
+    return apiCall('/admin/settings/pricing');
+  },
+  
+  // Update pricing settings
+  updatePricingSettings: async (pricingData: any) => {
+    return apiCall('/admin/settings/pricing', {
+      method: 'PUT',
+      body: JSON.stringify(pricingData)
+    });
+  }
+};
+
 // Analytics API (Legacy - keeping for backward compatibility)
 export const adminAnalyticsApi = {
   // Get booking analytics
@@ -480,98 +509,6 @@ export const adminAnalyticsApi = {
   }
 };
 
-// City Management API
-export const adminCitiesApi = {
-  // Get all cities
-  getAllCities: async () => {
-    return apiCall('/cities');
-  },
-  
-  // Get active cities only
-  getActiveCities: async () => {
-    return apiCall('/cities/active');
-  },
-  
-  // Get city by ID
-  getCityById: async (cityId: string) => {
-    return apiCall(`/cities/${cityId}`);
-  },
-  
-  // Create new city
-  createCity: async (cityData: {
-    name: string;
-    state: string;
-    isActive: boolean;
-    areas?: { name: string; isActive: boolean }[];
-  }) => {
-    return apiCall('/cities', {
-      method: 'POST',
-      body: JSON.stringify(cityData)
-    });
-  },
-  
-  // Update city
-  updateCity: async (cityId: string, cityData: {
-    name?: string;
-    state?: string;
-    isActive?: boolean;
-  }) => {
-    return apiCall(`/cities/${cityId}`, {
-      method: 'PUT',
-      body: JSON.stringify(cityData)
-    });
-  },
-  
-  // Delete city
-  deleteCity: async (cityId: string) => {
-    return apiCall(`/cities/${cityId}`, {
-      method: 'DELETE'
-    });
-  },
-  
-  // Toggle city status
-  toggleCityStatus: async (cityId: string) => {
-    return apiCall(`/cities/${cityId}/toggle-status`, {
-      method: 'PATCH'
-    });
-  },
-  
-  // Get areas for a city
-  getCityAreas: async (cityId: string) => {
-    return apiCall(`/cities/${cityId}/areas`);
-  },
-  
-  // Create new area
-  createArea: async (areaData: {
-    name: string;
-    cityId: string;
-    isActive: boolean;
-  }) => {
-    return apiCall('/cities/areas', {
-      method: 'POST',
-      body: JSON.stringify(areaData)
-    });
-  },
-  
-  // Update area
-  updateArea: async (areaId: string, areaData: {
-    name?: string;
-    isActive?: boolean;
-  }) => {
-    return apiCall(`/cities/areas/${areaId}`, {
-      method: 'PUT',
-      body: JSON.stringify(areaData)
-    });
-  },
-  
-  // Delete area
-  deleteArea: async (areaId: string) => {
-    return apiCall(`/cities/areas/${areaId}`, {
-      method: 'DELETE'
-    });
-  }
-};
-
 export default {
   dashboard: adminDashboardApi,
   users: adminUsersApi,
@@ -582,6 +519,6 @@ export default {
   transactions: adminTransactionsApi,
   notifications: adminNotificationsApi,
   reports: adminReportsApi,
-  analytics: adminAnalyticsApi,
-  cities: adminCitiesApi
+  settings: adminSettingsApi,
+  analytics: adminAnalyticsApi
 };
