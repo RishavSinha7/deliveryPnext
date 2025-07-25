@@ -2,12 +2,9 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Skeleton } from "./ui/skeleton";
+
 import { ArrowRight, Calendar } from "lucide-react";
 
-import { useJsApiLoader } from "@react-google-maps/api";
-import { MAPS_API_KEY } from "./utils/mapsApiKey";
-import LocationInput from "./LocationInput";
 import { BikeRateCards } from "./ratecards/TwoWheelerRateCards";
 import { TruckRateCards } from "./ratecards/TruckRateCards";
 import { PackersMoversCards } from "./ratecards/pmCards";
@@ -19,12 +16,7 @@ interface AppUIProps {
 
 export default function AppUI({ show = 'both' }: AppUIProps) {
   const router = useRouter();
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: MAPS_API_KEY,
-    libraries: ["places"],
-  });
 
-  const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     // Set default to current date and time
     const now = new Date();
@@ -37,11 +29,11 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
 
   // Truck options based on the rate cards
   const truckOptions = [
-    { value: '3_wheeler', label: '3 Wheeler', price: '₹800', capacity: '500 kg' },
-    { value: 'tata_ace', label: 'Tata Ace', price: '₹1000', capacity: '900 kg' },
-    { value: 'bolero_pickup', label: 'Bolero Pickup', price: '₹1400', capacity: '1700 kg' },
-    { value: 'tata_709_lpt', label: 'Tata 709 LPT', price: '₹4000', capacity: '6000 kg' },
-    { value: 'tata_lpt_1109', label: 'Tata LPT 1109', price: '₹4800', capacity: '8000 kg' }
+    { value: '3_wheeler', label: '3 Wheeler', dimensions: '5\'×3\'×3\'', capacity: '500 kg' },
+    { value: 'tata_ace', label: 'Tata Ace', dimensions: '7\'×4.5\'×4\'', capacity: '900 kg' },
+    { value: 'bolero_pickup', label: 'Bolero Pickup', dimensions: '8\'×5\'×4.5\'', capacity: '1700 kg' },
+    { value: 'tata_709_lpt', label: 'Tata 709 LPT', dimensions: '12\'×6\'×6\'', capacity: '6000 kg' },
+    { value: 'tata_lpt_1109', label: 'Tata LPT 1109', dimensions: '14\'×7\'×7\'', capacity: '8000 kg' }
   ];
 
   const handleGetEstimate = async () => {
@@ -110,7 +102,15 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
       // Get estimated fare based on service type
       const getEstimatedFare = (show: string, selectedTruckInfo: any) => {
         if (show === 'truck' && selectedTruckInfo) {
-          return parseInt(selectedTruckInfo.price.replace('₹', '').replace(',', ''));
+          // Set estimated fares based on truck type since we no longer have price property
+          const truckFares = {
+            '3_wheeler': 800,
+            'tata_ace': 1000,
+            'bolero_pickup': 1400,
+            'tata_709_lpt': 4000,
+            'tata_lpt_1109': 4800
+          };
+          return truckFares[selectedTruckInfo.value as keyof typeof truckFares] || 1000;
         } else if (show === 'pm') {
           return 5000; // Base fare for packers and movers
         }
@@ -202,7 +202,7 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
           if (show === 'truck' && selectedTruckInfo) {
             params.append('vehicleName', selectedTruckInfo.label);
             params.append('vehicleType', selectedTruck);
-            params.append('vehiclePrice', selectedTruckInfo.price);
+            params.append('vehicleDimensions', selectedTruckInfo.dimensions);
             params.append('vehicleCapacity', selectedTruckInfo.capacity);
           }
           
@@ -220,31 +220,6 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
       alert('An error occurred while creating your booking. Please check your internet connection and try again.');
     }
   };
-
-  if (!isLoaded) return <Skeleton className="h-6 w-32" />;
-
-  function getCurrentLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const latlng = { lat: latitude, lng: longitude };
-        const geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ location: latlng }, (results, status) => {
-          if (status === "OK" && results?.[0]) {
-            if (originRef.current)
-              originRef.current.value = results[0].formatted_address;
-            map?.panTo(latlng);
-            map?.setZoom(8);
-            setTimeout(() => map?.setZoom(15), 300);
-          } else {
-            alert("No address found.");
-          }
-        });
-      });
-    } else {
-      alert("Geolocation not supported.");
-    }
-  }
 
   return (
     <div className="min-h-screen bg-[#fafbfc]">
@@ -266,13 +241,25 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
         </div>
 
         {/* Floating Card */}
-        <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2 bg-white rounded-lg shadow-xl px-2 md:px-8 py-6 w-[95vw] md:w-[1000px] z-20">
+        <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2 bg-white rounded-lg shadow-xl px-2 md:px-8 py-8 w-[95vw] md:w-[1000px] z-20">
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 items-center">
             <div className="flex-2">
-              <LocationInput placeholder="Pickup Address " inputRef={originRef} />
+              <input 
+                ref={originRef}
+                type="text" 
+                placeholder="Pickup Address" 
+                className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+              />
+             
             </div>
             <div className="flex-2">
-              <LocationInput placeholder="Drop Address " inputRef={destRef} />
+              <input 
+                ref={destRef}
+                type="text" 
+                placeholder="Drop Address" 
+                className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+              />
+              
             </div>
             <div className="flex-2">
               <input type="text" placeholder="Phone Number" className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400" />
@@ -283,7 +270,7 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 min={new Date().toISOString().slice(0, 16)}
-                className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="px-2 py-1 border border-gray-300 text-gray-500 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
                 title="Select pickup date and time"
                 placeholder="Pickup Date & Time"
               />
@@ -296,13 +283,13 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
                 <select 
                   value={selectedTruck}
                   onChange={(e) => setSelectedTruck(e.target.value)}
-                  className="px-2 py-1 border border-gray-300 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                  className="px-2 py-1 border border-gray-300 text-gray-500 rounded text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
                   required
                 >
                   <option value="">Select Truck Type *</option>
                   {truckOptions.map((truck) => (
                     <option key={truck.value} value={truck.value}>
-                      {truck.label} - {truck.price}
+                      {truck.label} - {truck.capacity}
                     </option>
                   ))}
                 </select>
@@ -323,7 +310,7 @@ export default function AppUI({ show = 'both' }: AppUIProps) {
               onClick={handleGetEstimate}
               className="bg-blue-600 text-white px-6 py-2 font-bold font-md rounded-2xl cursor-pointer inline-flex items-center gap-2 text-sm hover:bg-blue-700 transition-colors"
             >
-              {show === 'pm' ? 'Get Quote' : 'Book Ride'} <ArrowRight className="w-4 h-4" />
+              Book Now <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>

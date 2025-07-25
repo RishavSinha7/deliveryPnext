@@ -191,7 +191,7 @@ async function apiCall<T>(
     
     // Provide more specific error messages for common issues
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      throw new Error(`Unable to connect to the server at ${API_BASE_URL}. Please ensure the backend server is running on port 5000.`);
+      throw new Error(`Unable to connect to the server at ${API_BASE_URL}. Please ensure the backend server is running on port 4000.`);
     }
     
     throw error;

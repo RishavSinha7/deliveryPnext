@@ -420,7 +420,7 @@ export default function VehiclesPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(`http://localhost:5000/uploads/vehicle-documents/${vehicle.registrationDocument}`, '_blank')}
+                              onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_URL}/uploads/vehicle-documents/${vehicle.registrationDocument}`, '_blank')}
                             >
                               RC
                             </Button>
@@ -429,7 +429,7 @@ export default function VehiclesPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(`http://localhost:5000/uploads/vehicle-documents/${vehicle.insuranceDocument}`, '_blank')}
+                              onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_URL}/uploads/vehicle-documents/${vehicle.insuranceDocument}`, '_blank')}
                             >
                               Insurance
                             </Button>
@@ -438,7 +438,7 @@ export default function VehiclesPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(`http://localhost:5000/uploads/vehicle-documents/${vehicle.pollutionDocument}`, '_blank')}
+                              onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_URL}/uploads/vehicle-documents/${vehicle.pollutionDocument}`, '_blank')}
                             >
                               PUC
                             </Button>

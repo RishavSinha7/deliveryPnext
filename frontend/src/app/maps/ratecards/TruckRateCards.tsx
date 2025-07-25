@@ -4,7 +4,7 @@ import { RateCard } from "./RateCards";
 export function TruckRateCards() {
   return (
     <div>
-      <div className="text-center font-bold text-2xl mb-2">Book Trucks in Patna</div>
+      <div className="text-center font-bold text-2xl mb-2">Book Trucks in Bihar</div>
       <div className="flex justify-center flex-wrap">
         <RateCard
           vehicle="3 WHEELER"

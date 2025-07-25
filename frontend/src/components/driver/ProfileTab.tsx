@@ -161,10 +161,7 @@ export const ProfileTab = ({ driverProfile, isLoading, onUpdateProfile }: Profil
                 <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200 w-fit mx-auto sm:mx-0">
                   Active Driver
                 </Badge>
-                <div className="flex items-center justify-center sm:justify-start space-x-2 text-sm text-gray-600">
-                  <Calendar className="h-4 w-4" />
-                  <span>Joined March 2023</span>
-                </div>
+                
               </div>
               <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:space-x-6 space-y-1 sm:space-y-0 text-sm text-gray-600">
                 <div className="flex items-center justify-center sm:justify-start space-x-2">
@@ -336,7 +333,7 @@ export const ProfileTab = ({ driverProfile, isLoading, onUpdateProfile }: Profil
                       <FormItem>
                         <FormLabel className="text-sm font-medium">City</FormLabel>
                         <FormControl>
-                          <Input placeholder="Bangalore" className="h-11" {...field} />
+                          <Input placeholder="Enter City" className="h-11" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -355,15 +352,9 @@ export const ProfileTab = ({ driverProfile, isLoading, onUpdateProfile }: Profil
                               <SelectValue placeholder="Select state" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Karnataka">Karnataka</SelectItem>
-                            <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                            <SelectItem value="Kerala">Kerala</SelectItem>
-                            <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
-                            <SelectItem value="Telangana">Telangana</SelectItem>
-                            <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                            <SelectItem value="Gujarat">Gujarat</SelectItem>
-                            <SelectItem value="Delhi">Delhi</SelectItem>
+                          <SelectContent className='bg-white'>
+                            <SelectItem value="Bihar">Bihar</SelectItem>
+
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -378,7 +369,7 @@ export const ProfileTab = ({ driverProfile, isLoading, onUpdateProfile }: Profil
                       <FormItem>
                         <FormLabel className="text-sm font-medium">Pincode</FormLabel>
                         <FormControl>
-                          <Input placeholder="560001" className="h-11" {...field} />
+                          <Input placeholder="Enter Pincode" className="h-11" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -463,7 +454,7 @@ export const ProfileTab = ({ driverProfile, isLoading, onUpdateProfile }: Profil
                               <SelectValue placeholder="Select experience" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-white">
                             <SelectItem value="1">1 Year</SelectItem>
                             <SelectItem value="2">2 Years</SelectItem>
                             <SelectItem value="3">3 Years</SelectItem>
@@ -487,7 +478,7 @@ export const ProfileTab = ({ driverProfile, isLoading, onUpdateProfile }: Profil
                       <FormLabel className="text-sm font-medium">Languages Spoken</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="e.g., English, Hindi, Kannada" 
+                           
                           className="h-11" 
                           {...field} 
                         />
@@ -502,7 +493,7 @@ export const ProfileTab = ({ driverProfile, isLoading, onUpdateProfile }: Profil
               <div className="pt-6 border-t">
                 <Button 
                   type="submit" 
-                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 h-11 px-8"
+                  className="w-full sm:w-auto text-white bg-blue-600 hover:bg-blue-700 h-11 px-8"
                   size="lg"
                 >
                   <Save className="mr-2 h-4 w-4" />

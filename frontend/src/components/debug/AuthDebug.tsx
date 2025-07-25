@@ -77,7 +77,7 @@ export const AuthDebug = () => {
               <button 
                 onClick={async () => {
                   try {
-                    const response = await fetch('http://localhost:5000/api/drivers/profile', {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_URL}/drivers/profile`, {
                       method: 'GET',
                       headers: {
                         'Authorization': `Bearer ${token}`,
@@ -102,7 +102,7 @@ export const AuthDebug = () => {
               <button 
                 onClick={async () => {
                   try {
-                    const response = await fetch('http://localhost:5000/api/vehicles/my-vehicles', {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_URL}/vehicles/my-vehicles`, {
                       method: 'GET',
                       headers: {
                         'Authorization': `Bearer ${token}`,
@@ -134,7 +134,7 @@ export const AuthDebug = () => {
                     formData.append('yearOfManufacture', '2023');
                     formData.append('insuranceNumber', 'TEST123');
                     
-                    const response = await fetch('http://localhost:5000/api/vehicles', {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_URL}/vehicles`, {
                       method: 'POST',
                       headers: {
                         'Authorization': `Bearer ${token}`,

@@ -54,7 +54,7 @@ const CitySelectionModal: React.FC<CitySelectionModalProps> = ({
   const fetchActiveCities = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/cities/active');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_ELSE_PUBLIC_URL}/cities/active`);
       const data = await response.json();
       
       if (data.success) {

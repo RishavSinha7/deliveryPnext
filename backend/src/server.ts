@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -28,59 +31,68 @@ const app = express();
 // Trust proxy
 app.set('trust proxy', 1);
 
-// Rate limiting - more lenient in development
-const limiter = rateLimit({
-  windowMs: config.rateLimitWindowMs,
-  max: config.nodeEnv === 'development' ? 10000 : config.rateLimitMaxRequests, // 10k requests in dev, normal limit in production
-  message: {
-    error: 'Too many requests from this IP, please try again later.',
-    retryAfter: Math.ceil(config.rateLimitWindowMs / 1000), // seconds to wait
+// ✅ Apply CORS middleware first
+const allowedOrigins = [
+  'https://deliverypartners.in', 
+  'https://www.deliverypartners.in',
+  'http://deliverypartners.in',   // Keep HTTP for fallback
+  'http://www.deliverypartners.in',
+  'http://localhost:3000'         // For development
+];
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting for health checks and static files
-    return req.path === '/api/health' || 
-           req.path.startsWith('/uploads/') ||
-           (config.nodeEnv === 'development' && req.path.startsWith('/api/auth'));
-  }
-});
-
-// Security middlewares
-app.use(helmet());
-app.use(limiter);
-
-// CORS configuration
-app.use(cors({
-  origin: true, // Allow all origins in development
-  credentials: true,
-  optionsSuccessStatus: 200,
+  credentials: true, // Allow cookies/authorization headers
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
     'Content-Type', 
     'Authorization', 
-    'X-Requested-With', 
-    'Accept', 
-    'Origin',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Methods'
+    'X-Requested-With',
+    'Accept',
+    'Origin'
   ],
-  exposedHeaders: ['Set-Cookie'],
-  preflightContinue: false
-}));
+};
 
-// Static file serving for uploads
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(cors(corsOptions));
 
-// Body parsing middlewares
+// ✅ Security middleware
+app.use(helmet());
+
+// ✅ Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: config.rateLimitWindowMs,
+  max: config.nodeEnv === 'development' ? 10000 : config.rateLimitMaxRequests,
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+    retryAfter: Math.ceil(config.rateLimitWindowMs / 1000),
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    return req.path === '/api/health' ||
+           req.path.startsWith('/uploads/') ||
+           (config.nodeEnv === 'development' && req.path.startsWith('/api/auth'));
+  }
+});
+app.use(limiter);
+
+// ✅ Compression middleware
+app.use(compression());
+
+// ✅ Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Compression
-app.use(compression());
+// ✅ Static file serving
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Logging
+// ✅ Logging middleware
 if (config.nodeEnv !== 'test') {
   app.use(morgan('combined', {
     stream: {
@@ -89,16 +101,14 @@ if (config.nodeEnv !== 'test') {
   }));
 }
 
-// Debug middleware to log request details
+// ✅ Request debug log
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   console.log('Origin:', req.headers.origin);
-  console.log('Headers:', req.headers);
-  console.log('---');
   next();
 });
 
-// Health check route
+// ✅ Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
@@ -108,16 +118,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Handle preflight requests for all routes
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
-});
-
-// API routes
+// ✅ API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -129,7 +130,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/support', supportRoutes);
 
-// 404 handler
+// ✅ 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Route not found',
@@ -137,17 +138,17 @@ app.use('*', (req, res) => {
   });
 });
 
-// Global error handler
+// ✅ Global error handler
 app.use(errorHandler);
 
-// Start server
+// ✅ Start server
 const server = app.listen(config.port, () => {
   logger.info(`🚀 Server running on port ${config.port}`);
   logger.info(`📱 Environment: ${config.nodeEnv}`);
   logger.info(`🔗 Health check: http://localhost:${config.port}/api/health`);
 });
 
-// Graceful shutdown
+// ✅ Graceful shutdown
 const gracefulShutdown = (signal: string) => {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
   server.close(() => {
